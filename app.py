@@ -14,11 +14,11 @@ from datetime import datetime
 def init_db():
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
-    # Tabella Utenti (Tua esistente)
+    # Tabella Utenti (Tua originale)
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
     
-    # Tabella Stato Mezzi (Nuova: per Consumabili e ECG persistente)
+    # Tabella Stato Mezzi (Nuova: per Consumabili e ECG)
     c.execute('''CREATE TABLE IF NOT EXISTS stato_mezzi 
                  (nome TEXT PRIMARY KEY, ossigeno INTEGER, presidi INTEGER, ecg_attivo INTEGER)''')
     
@@ -31,12 +31,12 @@ def init_db():
         ]
         c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
     
-    # Inizializzazione Mezzi nel DB se non presenti
-    mezzi_list = ["MSA 02 001", "MSA 2 004", "MSA 1 003", "CRI_BG_161.C", "CRI_BG_162.C", 
+    # Inizializzazione Mezzi nel DB
+    mezzi_nomi = ["MSA 02 001", "MSA 2 004", "MSA 1 003", "CRI_BG_161.C", "CRI_BG_162.C", 
                   "CBBG_014.C", "CABG_301.C", "CRITRE_124.C", "CRITRE_135.C", 
                   "CRIHBG_154.C", "CRIDAL_118.C", "HORUS I-LMBD"]
-    for m in mezzi_list:
-        c.execute("INSERT OR IGNORE INTO stato_mezzi VALUES (?, 100, 10, 0)", (m,))
+    for nome in mezzi_nomi:
+        c.execute("INSERT OR IGNORE INTO stato_mezzi VALUES (?, 100, 10, 0)", (nome,))
         
     conn.commit()
     conn.close()
@@ -56,6 +56,7 @@ def aggiorna_password_db(username, nuova_pw):
     conn.commit()
     conn.close()
 
+# Funzioni di supporto per stato mezzi nel DB
 def db_mezzi_update(nome, campo, valore):
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
@@ -74,9 +75,9 @@ def db_mezzi_get(nome):
 init_db()
 
 # =========================================================
-# 2. FUNZIONI CLINICHE E UTILITY
+# 2. FUNZIONI CLINICHE (ECG)
 # =========================================================
-def genera_grafico_ecg():
+def genera_ecg_plot():
     fs = 500
     t = np.linspace(0, 2, fs * 2)
     ecg = np.zeros_like(t)
@@ -93,24 +94,10 @@ def genera_grafico_ecg():
     plt.xticks([]); plt.yticks([])
     return fig
 
-def riproduci_suono_allarme():
-    audio_url = "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
-    st.components.v1.html(f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>', height=0)
-
-def riproduci_suono_notifica():
-    audio_url = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-    st.components.v1.html(f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>', height=0)
-
-def calcola_distanza_e_tempo(lat1, lon1, lat2, lon2, is_eli=False):
-    dist = math.sqrt((lat2-lat1)**2 + (lon2-lon1)**2) * 111
-    vel = 220.0 if is_eli else 45.0
-    tempo = round((dist / vel) * 60)
-    return round(dist, 1), max(1, tempo)
-
 # =========================================================
-# 3. LOGIN E SESSIONE
+# 3. SCHERMATA LOGIN
 # =========================================================
-st.set_page_config(page_title="SOREU Alpina PRO", layout="wide")
+st.set_page_config(page_title="SOREU Alpina - Simulatore 118", layout="wide")
 
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
 if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
@@ -118,6 +105,7 @@ if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = F
 if st.session_state.utente_connesso is None:
     st.title(" SOREU Alpina - Login")
     if st.session_state.fase_cambio_pw:
+        st.warning(f" Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
         n_p = st.text_input("Nuova Password", type="password")
         c_p = st.text_input("Conferma Password", type="password")
         if st.button("SALVA E ACCEDI"):
@@ -125,10 +113,11 @@ if st.session_state.utente_connesso is None:
                 aggiorna_password_db(st.session_state.temp_user, n_p)
                 st.session_state.utente_connesso = st.session_state.temp_user
                 st.rerun()
+            else: st.error("Errore password.")
     else:
         u_in = st.text_input("Username").lower().strip()
         p_in = st.text_input("Password", type="password")
-        if st.button("ACCEDI"):
+        if st.button("ACCEDI", type="primary"):
             user_data = get_utente_db(u_in)
             if user_data and user_data[1] == p_in:
                 if user_data[2] == 1:
@@ -138,114 +127,148 @@ if st.session_state.utente_connesso is None:
                 else:
                     st.session_state.utente_connesso = u_in
                     st.rerun()
+            else: st.error("ID o Password errati.")
     st.stop()
 
 # =========================================================
-# 4. DATABASE LOCALE SESSION_STATE (Dati Temporanei)
+# 4. IL TUO CODICE ORIGINALE INTEGRALE
 # =========================================================
+def riproduci_suono_allarme():
+    audio_url = "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
+    st.components.v1.html(f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>', height=0)
+
+def riproduci_suono_notifica():
+    audio_url = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    st.components.v1.html(f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>', height=0)
+
 if 'database_mezzi' not in st.session_state:
     st.session_state.database_mezzi = {
-        "MSA 02 001": {"stato": "Libero in Sede", "lat": 45.6869, "lon": 9.6272, "tipo": "MSA", "sede": "Osp. Papa Giovanni XXIII"},
-        "MSA 2 004": {"stato": "Libero in Sede", "lat": 45.5220, "lon": 9.5990, "tipo": "MSA", "sede": "Osp. Treviglio"},
-        "CRI_BG_161.C": {"stato": "Libero in Sede", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
-        "HORUS I-LMBD": {"stato": "Libero in Sede", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso"}
+        "MSA 02 001": {"stato": "Libero in Sede", "colore": "", "lat": 45.6869, "lon": 9.6272, "tipo": "MSA", "sede": "Osp. Papa Giovanni XXIII"},
+        "MSA 2 004": {"stato": "Libero in Sede", "colore": "", "lat": 45.5220, "lon": 9.5990, "tipo": "MSA", "sede": "Osp. Treviglio"},
+        "MSA 1 003": {"stato": "Libero in Sede", "colore": "", "lat": 45.5203, "lon": 9.7547, "tipo": "MSA", "sede": "Osp. Romano"},
+        "CRI_BG_161.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
+        "CRI_BG_162.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
+        "CBBG_014.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.6725, "lon": 9.6450, "tipo": "MSB", "sede": "Croce Bianca Bergamo"},
+        "CABG_301.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.7100, "lon": 9.6500, "tipo": "MSB", "sede": "Croce Azzurra Almenno"},
+        "CRITRE_124.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.5268, "lon": 9.5925, "tipo": "MSB", "sede": "CRI Treviglio"},
+        "CRITRE_135.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.5532, "lon": 9.6198, "tipo": "MSB", "sede": "CRI Treviglio"},
+        "CRIHBG_154.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.5940, "lon": 9.6910, "tipo": "MSB", "sede": "CRI Urgnano"},
+        "CRIDAL_118.C": {"stato": "Libero in Sede", "colore": "", "lat": 45.6475, "lon": 9.6012, "tipo": "MSB", "sede": "CRI Dalmine"},
+        "HORUS I-LMBD": {"stato": "Libero in Sede", "colore": "", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso Bergamo"}
     }
 
-if 'missioni' not in st.session_state: st.session_state.missioni = {}
-if 'registro_radio' not in st.session_state: st.session_state.registro_radio = []
-if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
-if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
-if 'evento_corrente' not in st.session_state: st.session_state.evento_corrente = None
+if 'database_ospedali' not in st.session_state:
+    st.session_state.database_ospedali = {
+        "Osp. Papa Giovanni XXIII (BG)": {"pazienti": 0, "max": 12, "hub": True},
+        "Osp. Treviglio-Caravaggio": {"pazienti": 0, "max": 6, "hub": False},
+        "Osp. Romano di Lombardia": {"pazienti": 0, "max": 4, "hub": False},
+        "Cliniche Gavazzeni (BG)": {"pazienti": 0, "max": 5, "hub": False}
+    }
+
+# Inizializzazione variabili sessione
+for key, val in {
+    'missioni': {}, 'notifiche_centrale': [], 'registro_radio': [], 
+    'scrivania_selezionata': None, 'ruolo': None, 'mezzo_selezionato': None,
+    'turno_iniziato': False, 'richiesta_chiusura': False, 'evento_corrente': None,
+    'last_mission_time': time.time(), 'time_mult': 1.0, 'auto_mode': False,
+    'suono_riprodotto': False, 'log_chiamate': []
+}.items():
+    if key not in st.session_state: st.session_state[key] = val
+
+def calcola_distanza_e_tempo(lat1, lon1, lat2, lon2, is_eli=False):
+    R = 6371.0
+    dlat, dlon = math.radians(lat2-lat1), math.radians(lon2-lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1))*math.cos(math.radians(lat2))*math.sin(dlon/2)**2
+    dist = R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    vel = 220.0 if is_eli else 45.0
+    tm = round((dist/vel)*60) + (2 if is_eli else 0)
+    return round(dist, 1), max(1, tm)
 
 def aggiungi_log_radio(mittente, messaggio):
-    orario = datetime.now().strftime("%H:%M:%S")
-    st.session_state.registro_radio.insert(0, f"[{orario}] {mittente}: {messaggio}")
+    st.session_state.registro_radio.insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] {mittente}: {messaggio}")
 
-# =========================================================
-# 5. INTERFACCIA OPERATIVA
-# =========================================================
+# --- LOGICA OPERATIVA ---
+col_titolo, col_orologio = st.columns([3, 1])
+with col_titolo: st.title(" SOREU Alpina - Sala Operativa")
+with col_orologio: st.metric(" Orario Reale", datetime.now().strftime("%H:%M:%S"))
+
 if st.session_state.scrivania_selezionata is None:
-    st.subheader(" Selezione Postazione")
-    col1, col2 = st.columns(2)
-    if col1.button("🎧 CENTRALE OPERATIVA"):
-        st.session_state.scrivania_selezionata = "CENTRALE"; st.session_state.ruolo = "centrale"; st.rerun()
-    if col2.button("🚑 EQUIPAGGIO MEZZO"):
-        st.session_state.scrivania_selezionata = "MEZZO"; st.session_state.ruolo = "mezzo"; st.rerun()
+    st.subheader(" Selezione Postazione di Lavoro")
+    c1, c2, c3 = st.columns(3)
+    if c1.button("Scrivania 1", use_container_width=True): st.session_state.scrivania_selezionata=1; st.session_state.ruolo="centrale"; st.rerun()
+    if c3.button("Mezzo (Esterno)", use_container_width=True): st.session_state.scrivania_selezionata="MEZZO"; st.session_state.ruolo="mezzo"; st.rerun()
+elif not st.session_state.turno_iniziato and st.session_state.ruolo == "centrale":
+    if st.button(" INIZIA TURNO ", type="primary", use_container_width=True): st.session_state.turno_iniziato=True; st.rerun()
 else:
-    # --- SIDEBAR COMUNE ---
-    st.sidebar.title(f"📍 {st.session_state.scrivania_selezionata}")
-    if st.sidebar.button("Cambia Ruolo / Logout"):
-        st.session_state.scrivania_selezionata = None
-        st.rerun()
-
-    # ==================== LOGICA CENTRALE ====================
+    # --- INTERFACCIA CENTRALE ---
     if st.session_state.ruolo == "centrale":
-        tab_invio, tab_risorse = st.tabs([" Chiamate", " Monitoraggio Mezzi"])
+        tab_invio, tab_risorse, tab_ps = st.tabs([" Nuove Missioni", " Stato Risorse", " Monitoraggio PS"])
         
         with tab_invio:
-            col_ev, col_map = st.columns([1, 1.5])
+            col_ev, col_mappa = st.columns([1.5, 2])
             with col_ev:
-                if st.button(" Forza Chiamata 112"):
-                    st.session_state.evento_corrente = {"via": "Piazza Vecchia", "comune": "Bergamo", "lat": 45.7042, "lon": 9.6622, "sintomi": "Sospetto IMA, dolore toracico"}
+                if st.button("Forza Chiamata"):
+                    st.session_state.evento_corrente = {"via": "Piazza Vecchia", "comune": "Bergamo", "lat": 45.7042, "lon": 9.6622, "sintomi": "Dolore toracico", "codice_reale": "ROSSO"}
                     riproduci_suono_allarme(); st.rerun()
                 
                 if st.session_state.evento_corrente:
                     ev = st.session_state.evento_corrente
-                    st.warning(f"EVENTO: {ev['sintomi']} in {ev['via']}")
-                    mezzo_scelto = st.selectbox("Invia Mezzo", list(st.session_state.database_mezzi.keys()))
-                    if st.button("INVIA"):
-                        st.session_state.missioni[mezzo_scelto] = {"target": ev['via'], "lat": ev['lat'], "lon": ev['lon']}
-                        st.session_state.database_mezzi[mezzo_scelto]["stato"] = "1 - Partenza"
+                    st.warning(f"TARGET: {ev['via']}, {ev['comune']}")
+                    mezzo = st.selectbox("Seleziona Mezzo", list(st.session_state.database_mezzi.keys()))
+                    if st.button("INVIA MEZZO"):
+                        st.session_state.missioni[mezzo] = {"target": ev['via'], "timestamp_creazione": time.time(), "ospedale_assegnato": "Osp. Papa Giovanni XXIII (BG)"}
+                        st.session_state.database_mezzi[mezzo]["stato"] = "1 - Partenza da sede"
                         st.session_state.evento_corrente = None; st.rerun()
-            with col_map:
+            with col_mappa:
                 st.map(pd.DataFrame([{"lat": v["lat"], "lon": v["lon"]} for v in st.session_state.database_mezzi.values()]))
 
         with tab_risorse:
             for m, d in st.session_state.database_mezzi.items():
                 params = db_mezzi_get(m)
-                c1, c2 = st.columns([1, 2])
-                c1.write(f"**{m}**\n{d['stato']}\nO2: {params[0]}%")
-                if params[2] == 1:
-                    with c2: st.pyplot(genera_grafico_ecg())
-                else:
-                    c2.info("Nessuna Telemetria")
+                with st.expander(f"{m} - {d['stato']}"):
+                    c1, c2 = st.columns([1, 2])
+                    c1.write(f"O2: {params[0]}% | Kit: {params[1]}")
+                    if params[2] == 1: 
+                        with c2: st.pyplot(genera_ecg_plot())
+                    else: c2.info("Nessuna telemetria ECG attiva.")
 
-    # ==================== LOGICA MEZZO ====================
+    # --- INTERFACCIA MEZZO ---
     elif st.session_state.ruolo == "mezzo":
-        mio_mezzo = st.selectbox("Seleziona il tuo Mezzo", list(st.session_state.database_mezzi.keys()))
-        params = db_mezzi_get(mio_mezzo)
-        
-        st.title(f"📟 Terminale {mio_mezzo}")
-        col_btn, col_clinica = st.columns([1, 1.5])
-        
-        with col_btn:
-            st.subheader("Stati")
-            if st.button("2 - Arrivo Posto"):
-                st.session_state.database_mezzi[mio_mezzo]["stato"] = "2 - Arrivo Posto"; st.rerun()
+        if st.session_state.mezzo_selezionato is None:
+            st.session_state.mezzo_selezionato = st.selectbox("Seleziona Mezzo", list(st.session_state.database_mezzi.keys()))
+            if st.button("Login Mezzo"): st.rerun()
+        else:
+            mio = st.session_state.mezzo_selezionato
+            params = db_mezzi_get(mio)
+            st.header(f"Terminale {mio}")
             
-            # Blocco: Se O2 < 15 o ECG non fatto, non vai in Stato 3
-            puo_partire = (params[2] == 1 and params[0] > 15)
-            if st.button("3 - Partenza Osp.", disabled=not puo_partire):
-                db_mezzi_update(mio_mezzo, "ossigeno", params[0]-20)
-                db_mezzi_update(mio_mezzo, "presidi", params[1]-1)
-                st.session_state.database_mezzi[mio_mezzo]["stato"] = "3 - Trasporto"; st.rerun()
-            
-            if st.button("4 - Libero"):
-                db_mezzi_update(mio_mezzo, "ecg_attivo", 0)
-                st.session_state.database_mezzi[mio_mezzo]["stato"] = "Libero in Sede"
-                if mio_mezzo in st.session_state.missioni: del st.session_state.missioni[mio_mezzo]
-                st.rerun()
-        
-        with col_clinica:
-            st.subheader("Scheda Paziente")
-            if st.button("💓 ESEGUI ECG"):
-                db_mezzi_update(mio_mezzo, "ecg_attivo", 1)
-                st.pyplot(genera_grafico_ecg())
-                st.success("ECG Trasmesso alla SOREU")
-                st.rerun()
-            
-            st.write(f"Scorte Ossigeno: {params[0]}%")
-            if params[0] < 20: st.error("⚠️ Rifornire Ossigeno!")
-            if st.button("Rifornimento Totale"):
-                db_mezzi_update(mio_mezzo, "ossigeno", 100)
-                db_mezzi_update(mio_mezzo, "presidi", 10); st.rerun()
+            c_stati, c_scheda = st.columns([1, 1.5])
+            with c_stati:
+                if st.button("2 - Arrivo Posto"): 
+                    st.session_state.database_mezzi[mio]["stato"]="2 - Arrivato su posto"; st.rerun()
+                
+                # Blocco Trasporto (Stato 3): Richiede ECG fatto e O2 > 15
+                puo_trasportare = (params[2] == 1 and params[0] > 15)
+                if st.button("3 - Partenza Ospedale", disabled=not puo_trasportare):
+                    db_mezzi_update(mio, "ossigeno", params[0]-25)
+                    st.session_state.database_mezzi[mio]["stato"]="3 - Partenza per ospedale"; st.rerun()
+                
+                if st.button("4 - Libero"):
+                    db_mezzi_update(mio, "ecg_attivo", 0)
+                    st.session_state.database_mezzi[mio]["stato"]="Libero in Sede"
+                    if mio in st.session_state.missioni: del st.session_state.missioni[mio]
+                    st.rerun()
+
+            with c_scheda:
+                st.subheader("Parametri Vitali")
+                pa = st.slider("PA Sistolica", 50, 200, 120)
+                fc = st.slider("FC", 30, 180, 80)
+                if st.button("💓 ESEGUI E TRASMETTI ECG"):
+                    db_mezzi_update(mio, "ecg_attivo", 1)
+                    st.pyplot(genera_ecg_plot())
+                    st.success("Tracciato inviato in Centrale!")
+                
+                st.divider()
+                st.write(f"Scorte O2: {params[0]}% | Kit: {params[1]}")
+                if st.button("Rifornimento Mezzo"):
+                    db_mezzi_update(mio, "ossigeno", 100); db_mezzi_update(mio, "presidi", 10); st.rerun()
