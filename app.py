@@ -532,4 +532,3 @@ else:
                     st.info(f"🚩 **Direzione:** {miss['target']}")
                 else:
                     st.success("Nessun paziente a bordo. In attesa di missione.")
-```
