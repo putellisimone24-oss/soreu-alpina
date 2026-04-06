@@ -216,11 +216,21 @@ else:
     else:
         st.sidebar.markdown(f"### 🖥️ Scrivania: **{st.session_state.scrivania_selezionata}**")
     
+    # 🔄 PULSANTE CAMBIO RUOLO LIBERO
+    if st.sidebar.button("⬅️ Cambia Ruolo", use_container_width=True):
+        st.session_state.scrivania_selezionata = None
+        st.session_state.ruolo = None
+        st.session_state.mezzo_selezionato = None
+        st.rerun()
+        
+    st.sidebar.divider()
+    
+    # 🛑 PULSANTE CHIUDI TURNO (OPZIONE FINALE)
     if not st.session_state.richiesta_chiusura:
-        if st.sidebar.button("🛑 CHIUDI TURNO", type="primary", use_container_width=True):
+        if st.sidebar.button("🛑 CHIUDI TURNO", type="secondary", use_container_width=True):
             st.session_state.richiesta_chiusura = True; st.rerun()
     else:
-        st.sidebar.warning("Chiudere il turno?")
+        st.sidebar.warning("Vuoi resettare tutto e chiudere il turno definitivamente?")
         col_c1, col_c2 = st.sidebar.columns(2)
         with col_c1:
             if st.button("✔️ Sì", type="primary", use_container_width=True):
@@ -369,7 +379,7 @@ else:
                     if st.button(f"Libera Posto", key=f"dim_{osp}"):
                         if dati["pazienti"] > 0: st.session_state.database_ospedali[osp]["pazienti"] -= 1; st.rerun()
 
-    # ==================== 🚑 INTERFACCIA MEZZO (PUNTO 2) ====================
+    # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
         if st.session_state.auto_mode: st.warning("⚠️ La modalità AUTOMATICA è attiva.")
         
@@ -426,9 +436,9 @@ else:
                     scala_gcs = st.selectbox("Livello di Coscienza (GCS)", ["15 - Sveglio e Cosciente", "12/14 - Confuso/Sonnolento", "8 o meno - Coma / Non risponde"])
                     
                     # Logica clinica per supporto MSA
-                    paziente_critico = (pa_sistolica < 90 or pa_sistolica > 180 or freq_card < 50 or freq_card > 120 or sat_o2 < 90 or "8 o meno" in scala_gcs)
+                    pz_critico = (pa_sistolica < 90 or pa_sistolica > 180 or freq_card < 50 or freq_card > 120 or sat_o2 < 90 or "8 o meno" in scala_gcs)
                     
-                    if paziente_critico:
+                    if pz_critico:
                         st.error("⚠️ ATTENZIONE: I parametri indicano un paziente INSTABILE!")
                         if st.button("📞 Richiedi Supporto Medica (MSA / ELI)", type="primary", use_container_width=True):
                             st.session_state.notifiche_centrale.append(f"🆘 {mio_mezzo} richiede AUTOMEDICA sul posto per parametri critici!")
