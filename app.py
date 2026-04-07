@@ -469,9 +469,9 @@ else:
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
-    if st.session_state.mezzo_selezionato is None:
+        if st.session_state.mezzo_selezionato is None:
         st.session_state.mezzo_selezionato = st.selectbox("Seleziona il Mezzo in turno", list(st.session_state.database_mezzi.keys()))
-        if st.button("CONNETTI TABLET"): st.rerun()
+            if st.button("CONNETTI TABLET"): st.rerun()
     else:
         mio_mezzo = st.session_state.mezzo_selezionato
         inv = st.session_state.inventario_mezzi[mio_mezzo]
