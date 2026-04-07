@@ -113,7 +113,7 @@ if 'database_mezzi' not in st.session_state:
     }
  if 'inventario_mezzi' not in st.session_state:
     # Inizializza ossigeno ed elettrodi per ogni mezzo nel tuo DB
-st.session_state.inventario_mezzi = {
+                st.session_state.inventario_mezzi = {
         m: {"O2": 100, "Elettrodi": 20} for m in st.session_state.database_mezzi.keys()
     }
 
