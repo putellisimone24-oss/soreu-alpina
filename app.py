@@ -42,6 +42,17 @@ def aggiorna_password_db(username, nuova_pw):
     conn.close()
 
 init_db()
+# =========================================================
+# 2. FUNZIONI TECNICHE (ECG E ALLARMI)
+# =========================================================
+def genera_tracciato_ecg():
+    x = np.linspace(0, 10, 500)
+    y = np.sin(x * 1.2 * 2 * np.pi) + 0.5 * np.sin(x * 2.4 * 2 * np.pi) + np.random.normal(0, 0.05, 500)
+    return pd.DataFrame({"Tempo": x, "mV": y})
+
+def riproduci_suono_allarme():
+    audio_url = "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
+    st.components.v1.html(f'<audio autoplay style="display:none;"><source src="{audio_url}"></audio>', height=0)
 
 # =========================================================
 # 2. SCHERMATA LOGIN (PRIMA DI TUTTO IL RESTO)
@@ -458,77 +469,47 @@ else:
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
-        if st.session_state.auto_mode: st.warning("⚠️ La modalità AUTOMATICA è attiva.")
+    if st.session_state.mezzo_selezionato is None:
+        st.session_state.mezzo_selezionato = st.selectbox("Seleziona il Mezzo in turno", list(st.session_state.database_mezzi.keys()))
+        if st.button("CONNETTI TABLET"): st.rerun()
+    else:
+        mio_mezzo = st.session_state.mezzo_selezionato
+        inv = st.session_state.inventario_mezzi[mio_mezzo]
+        dati_m = st.session_state.database_mezzi[mio_mezzo]
         
-        if st.session_state.mezzo_selezionato is None:
-            st.subheader("Identificazione Equipaggio")
-            scelta = st.radio("Seleziona mezzo:", list(st.session_state.database_mezzi.keys()))
-            if st.button("Login", use_container_width=True): st.session_state.mezzo_selezionato = scelta; st.rerun()
-        else:
-            mio_mezzo = st.session_state.mezzo_selezionato
-            dati_mezzo = st.session_state.database_mezzi[mio_mezzo]
+        st.title(f"🚑 Terminale di Bordo: {mio_mezzo}")
+        
+        col_inv, col_diag = st.columns([1, 2])
+        
+        with col_inv:
+            st.subheader("📦 Inventario")
+            st.metric("Elettrodi", inv['Elettrodi'])
+            st.metric("Ossigeno", f"{inv['O2']}%")
+            if st.button("🔄 Rifornimento"):
+                st.session_state.inventario_mezzi[mio_mezzo] = {"O2": 100, "Elettrodi": 20}
+                st.rerun()
+        
+        with col_diag:
+            st.subheader("🩺 Monitor Paziente")
+            pa = st.slider("Pressione Sistolica", 40, 220, 120)
+            fc = st.slider("Frequenza Cardiaca", 30, 200, 80)
             
-            # Layout a due colonne per l'equipaggio
-            col_stati, col_scheda = st.columns([1, 1.5])
-            
-            with col_stati:
-                st.header(f"📟 Terminale: {mio_mezzo}")
-                st.write(f"Stato Attuale: **{dati_mezzo['stato']}**")
-                
-                st.divider()
-                st.subheader("Pulsantiera Operativa")
-                in_missione = mio_mezzo in st.session_state.missioni
-                miss = st.session_state.missioni[mio_mezzo] if in_missione else None
-                disabilita_manuale = st.session_state.auto_mode or not in_missione
-                
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button("🚨 1 - Partenza Sede", use_container_width=True, disabled=disabilita_manuale):
-                        dati_mezzo["stato"] = "1 - Partenza da sede"
-                        aggiungi_log_radio(mio_mezzo, "STATO 1: Partenza da sede direzione luogo intervento."); st.rerun()
-                    if st.button("🏥 3 - Partenza Ospedale", use_container_width=True, disabled=disabilita_manuale):
-                        dati_mezzo["stato"] = "3 - Partenza per ospedale"
-                        dest = miss.get("ospedale_confermato", miss["ospedale_assegnato"])
-                        aggiungi_log_radio(mio_mezzo, f"STATO 3: Paziente a bordo. Direzione {dest}."); st.rerun()
-                with c2:
-                    if st.button("📍 2 - Arrivo Posto", use_container_width=True, disabled=disabilita_manuale):
-                        dati_mezzo["stato"] = "2 - Arrivato su posto"
-                        aggiungi_log_radio(mio_mezzo, "STATO 2: Arrivati sul luogo dell'evento."); st.rerun()
-                    if st.button("🏁 4 - Arrivo Ospedale", type="primary", use_container_width=True, disabled=disabilita_manuale):
-                        dati_mezzo["stato"], dati_mezzo["colore"] = "Libero in Sede", "🟢"
-                        aggiungi_log_radio(mio_mezzo, "STATO 4: Arrivati a destinazione. Mezzo LIBERO.")
-                        dest = miss.get("ospedale_confermato", miss["ospedale_assegnato"])
-                        if dest in st.session_state.database_ospedali: st.session_state.database_ospedali[dest]["pazienti"] += 1
-                        del st.session_state.missioni[mio_mezzo]; st.rerun()
-            
-            with col_scheda:
-                st.header("📋 Scheda Paziente")
-                if in_missione and dati_mezzo["stato"] in ["2 - Arrivato su posto", "3 - Partenza per ospedale"]:
-                    st.info(f"🎯 **Target:** {miss['target']}\n\n🗣️ **Note Centrale:** {miss.get('patologia','N/D')}")
-                    
-                    st.subheader("🩺 Inserimento Parametri Vitali")
-                    pa_sistolica = st.slider("Pressione Sistolica (PA)", 50, 200, 120)
-                    freq_card = st.slider("Frequenza Cardiaca (FC)", 30, 180, 80)
-                    sat_o2 = st.slider("Saturazione O2 (%)", 70, 100, 98)
-                    scala_gcs = st.selectbox("Livello di Coscienza (GCS)", ["15 - Sveglio e Cosciente", "12/14 - Confuso/Sonnolento", "8 o meno - Coma / Non risponde"])
-                    
-                    pz_critico = (pa_sistolica < 90 or pa_sistolica > 180 or freq_card < 50 or freq_card > 120 or sat_o2 < 90 or "8 o meno" in scala_gcs)
-                    
-                    if pz_critico:
-                        st.error("⚠️ ATTENZIONE: I parametri indicano un paziente INSTABILE!")
-                        if st.button("📞 Richiedi Supporto Medica (MSA / ELI)", type="primary", use_container_width=True):
-                            st.session_state.notifiche_centrale.append(f"🆘 {mio_mezzo} richiede AUTOMEDICA sul posto per parametri critici!")
-                            aggiungi_log_radio(mio_mezzo, f"Centrale da {mio_mezzo}: Richiediamo supporto medico sul posto. Paziente non stabile.")
-                            st.toast("Richiesta inviata in Centrale!", icon="🚨")
-                    else:
-                        st.success("Parametri accettabili per trasporto con MSB.")
-                        if st.button("📑 Trasmetti Parametri e richiedi Ospedale", use_container_width=True):
-                            st.session_state.notifiche_centrale.append(f"🩺 {mio_mezzo} comunica parametri: PA {pa_sistolica}, FC {freq_card}, Sat {sat_o2}%.")
-                            aggiungi_log_radio(mio_mezzo, f"Centrale da {mio_mezzo}: Parametri trasmessi. Richiediamo conferma ospedale per ripartire.")
-                            st.toast("Parametri inviati!", icon="✔️")
-                
-                elif in_missione and dati_mezzo["stato"] == "1 - Partenza da sede":
-                    st.warning("Raggiungi il luogo dell'evento per sbloccare la scheda paziente.")
-                    st.info(f"🚩 **Direzione:** {miss['target']}")
+            if st.button("📉 ESEGUI E TRASMETTI ECG", type="primary", use_container_width=True):
+                if inv['Elettrodi'] >= 4:
+                    st.session_state.inventario_mezzi[mio_mezzo]['Elettrodi'] -= 4
+                    st.session_state.ecg_repository[mio_mezzo] = genera_tracciato_ecg()
+                    aggiungi_log_radio(mio_mezzo, "ECG 12 derivazioni trasmesso in Centrale.")
+                    st.toast("ECG Trasmesso!")
+                    st.rerun()
                 else:
-                    st.success("Nessun paziente a bordo. In attesa di missione.")
+                    st.error("Elettrodi insufficienti per eseguire l'ECG!")
+            
+            if mio_mezzo in st.session_state.ecg_repository:
+                st.line_chart(st.session_state.ecg_repository[mio_mezzo], x="Tempo", y="mV")
+
+            if st.button("🏁 CHIUDI INTERVENTO E RESET"):
+                st.session_state.inventario_mezzi[mio_mezzo]["O2"] -= random.randint(5,15)
+                if mio_mezzo in st.session_state.ecg_repository:
+                    del st.session_state.ecg_repository[mio_mezzo]
+                st.success("Missione chiusa, ossigeno scalato.")
+                st.rerun()
