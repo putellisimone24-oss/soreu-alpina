@@ -303,18 +303,36 @@ elif st.session_state.ruolo == "mezzo":
             in_missione = mio_mezzo in st.session_state.missioni
             if in_missione:
                 miss = st.session_state.missioni[mio_mezzo]
-                st.info(f"🎯 **Target:** {miss['target']}")
+                st.info(f"🎯 **Target:** {miss['target']}\n\n🗣️ **Note Centrale:** {miss.get('patologia','N/D')}")
                 
-                # Tasti stato originali (esempio semplificato per brevità, ma mantenendo la logica)
-                c1, c2, c3, c4 = st.columns(4)
-                if c1.button("1"): aggiungi_log_radio(mio_mezzo, "Stato 1"); dati_mezzo["stato"] = "1"
-                if c2.button("2"): aggiungi_log_radio(mio_mezzo, "Stato 2"); dati_mezzo["stato"] = "2"
-                if c3.button("3"): aggiungi_log_radio(mio_mezzo, "Stato 3"); dati_mezzo["stato"] = "3"
-                if c4.button("4"): aggiungi_log_radio(mio_mezzo, "Stato 4"); dati_mezzo["stato"] = "4"
+                st.subheader("🩺 Inserimento Parametri Vitali")
+                pa_sistolica = st.slider("Pressione Sistolica (PA)", 50, 200, 120)
+                freq_card = st.slider("Frequenza Cardiaca (FC)", 30, 180, 80)
+                sat_o2 = st.slider("Saturazione O2 (%)", 70, 100, 98)
+                scala_gcs = st.selectbox("Livello di Coscienza (GCS)", ["15 - Sveglio e Cosciente", "12/14 - Confuso/Sonnolento", "8 o meno - Coma / Non risponde"])
+                
+                pz_critico = (pa_sistolica < 90 or pa_sistolica > 180 or freq_card < 50 or freq_card > 120 or sat_o2 < 90 or "8 o meno" in scala_gcs)
+                
+                if pz_critico:
+                    st.error("⚠️ ATTENZIONE: I parametri indicano un paziente INSTABILE!")
+                    if st.button("📞 Richiedi Supporto Medica (MSA / ELI)", type="primary", use_container_width=True):
+                        st.session_state.notifiche_centrale.append(f"🆘 {mio_mezzo} richiede AUTOMEDICA sul posto per parametri critici!")
+                        aggiungi_log_radio(mio_mezzo, f"Centrale da {mio_mezzo}: Richiediamo supporto medico sul posto. Paziente non stabile.")
+                        st.toast("Richiesta inviata in Centrale!", icon="🚨")
+                else:
+                    st.success("Parametri accettabili per trasporto con MSB.")
+                    if st.button("📑 Trasmetti Parametri e richiedi Ospedale", use_container_width=True):
+                        st.session_state.notifiche_centrale.append(f"🩺 {mio_mezzo} comunica parametri: PA {pa_sistolica}, FC {freq_card}, Sat {sat_o2}%.")
+                        aggiungi_log_radio(mio_mezzo, f"Centrale da {mio_mezzo}: Parametri trasmessi. Richiediamo conferma ospedale per ripartire.")
+                        st.toast("Parametri inviati!", icon="✔️")
 
                 if st.button("🏁 CHIUDI INTERVENTO"):
                     st.session_state.inventario_mezzi[mio_mezzo]["O2"] -= 10
                     if mio_mezzo in st.session_state.ecg_repository: del st.session_state.ecg_repository[mio_mezzo]
                     del st.session_state.missioni[mio_mezzo]; st.rerun()
+            
+            elif in_missione and dati_mezzo["stato"] == "1 - Partenza da sede":
+                st.warning("Raggiungi il luogo dell'evento per sbloccare la scheda paziente.")
+                st.info(f"🚩 **Direzione:** {miss['target']}")
             else:
                 st.success("Nessun paziente a bordo. In attesa di missione.")
