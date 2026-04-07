@@ -111,9 +111,9 @@ if 'database_mezzi' not in st.session_state:
         "CRIDAL_118.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6475, "lon": 9.6012, "tipo": "MSB", "sede": "CRI Dalmine"},
         "HORUS I-LMBD": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso Bergamo"}
     }
-    if 'inventario_mezzi' not in st.session_state:
+ if 'inventario_mezzi' not in st.session_state:
     # Inizializza ossigeno ed elettrodi per ogni mezzo nel tuo DB
-    st.session_state.inventario_mezzi = {
+st.session_state.inventario_mezzi = {
         m: {"O2": 100, "Elettrodi": 20} for m in st.session_state.database_mezzi.keys()
     }
 
