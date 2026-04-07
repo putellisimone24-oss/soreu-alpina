@@ -111,6 +111,20 @@ if 'database_mezzi' not in st.session_state:
         "CRIDAL_118.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6475, "lon": 9.6012, "tipo": "MSB", "sede": "CRI Dalmine"},
         "HORUS I-LMBD": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso Bergamo"}
     }
+    if 'inventario_mezzi' not in st.session_state:
+    # Inizializza ossigeno ed elettrodi per ogni mezzo nel tuo DB
+    st.session_state.inventario_mezzi = {
+        m: {"O2": 100, "Elettrodi": 20} for m in st.session_state.database_mezzi.keys()
+    }
+
+if 'ecg_repository' not in st.session_state:
+    st.session_state.ecg_repository = {} # Qui verranno salvati gli ECG inviati
+
+def genera_tracciato_ecg(ritmo="sinusale"):
+    """Funzione per creare il grafico dell'ECG"""
+    x = np.linspace(0, 10, 500)
+    y = np.sin(x * 1.2 * 2 * np.pi) + 0.5 * np.sin(x * 2.4 * 2 * np.pi) + np.random.normal(0, 0.05, 500)
+    return pd.DataFrame({"Tempo": x, "mV": y})
 
 # 2. DATABASE OSPEDALI REALI
 if 'database_ospedali' not in st.session_state:
@@ -455,6 +469,11 @@ else:
                 with col_azione:
                     if st.button(f"Libera Posto", key=f"dim_{osp}"):
                         if dati["pazienti"] > 0: st.session_state.database_ospedali[osp]["pazienti"] -= 1; st.rerun()
+                            if m_nome in st.session_state.ecg_repository:
+    st.write("📋 **Tele-Consulto ECG in tempo reale:**")
+    st.line_chart(st.session_state.ecg_repository[m_nome], x="Tempo", y="mV", height=150)
+    if st.button(f"Referta ECG {m_nome}"):
+        st.toast(f"ECG di {m_nome} visionato dal Medico di Centrale.")
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
@@ -532,3 +551,22 @@ else:
                     st.info(f"🚩 **Direzione:** {miss['target']}")
                 else:
                     st.success("Nessun paziente a bordo. In attesa di missione.")
+                    st.subheader("📉 Strumentazione Medica")
+inv = st.session_state.inventario_mezzi[mio_mezzo]
+
+if st.button("📉 ESEGUI E TRASMETTI ECG", type="primary", use_container_width=True):
+    if inv['Elettrodi'] >= 4:
+        # Consuma elettrodi e genera il tracciato
+        st.session_state.inventario_mezzi[mio_mezzo]['Elettrodi'] -= 4
+        st.session_state.ecg_repository[mio_mezzo] = genera_tracciato_ecg()
+        
+        # Invia notifica alla centrale e log radio
+        st.session_state.notifiche_centrale.append(f"⚡ ECG ricevuto da {mio_mezzo}!")
+        aggiungi_log_radio(mio_mezzo, "ECG eseguito e trasmesso per tele-consulto.")
+        st.success("ECG Trasmesso con successo!")
+    else:
+        st.error("Elettrodi insufficienti sul mezzo!")
+
+# Visualizza il tracciato sul tablet del mezzo
+if mio_mezzo in st.session_state.ecg_repository:
+    st.line_chart(st.session_state.ecg_repository[mio_mezzo], x="Tempo", y="mV")
