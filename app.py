@@ -270,21 +270,21 @@ database_indirizzi = [
     {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)", "lat": 45.648, "lon": 9.602},
     {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
     {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
-    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero Alpino", "lat": 45.912, "lon": 10.081},
-    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico / Palestra", "lat": 45.795, "lon": 9.664},
+    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero", "lat": 45.912, "lon": 10.081},
+    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
     {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
-    {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico / Imbarcadero", "lat": 45.814, "lon": 10.071}
+    {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071}
 ]
 
 scenari_clinici = [
-    {"sintomi": "Sospetto IMA (Infarto)", "codice_reale": "ROSSO", "tipo": "Cardio", "msa": True},
-    {"sintomi": "Arresto Cardio-Respiratorio", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "msa": True},
-    {"sintomi": "Sospetto ICTUS (Stroke)", "codice_reale": "ROSSO", "tipo": "Neuro", "msa": True},
-    {"sintomi": "Incidente Auto-Moto", "codice_reale": "ROSSO", "tipo": "Trauma", "msa": True},
-    {"sintomi": "Infortunio sul Lavoro", "codice_reale": "ROSSO", "tipo": "Trauma", "msa": True},
-    {"sintomi": "Caduta - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "msa": False},
-    {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "msa": False},
-    {"sintomi": "Paziente anziano con febbre", "codice_reale": "VERDE", "tipo": "Medico", "msa": False}
+    {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico", "codice_reale": "ROSSO", "tipo": "Cardio", "necessita_msa": True},
+    {"sintomi": "Arresto Cardio-Respiratorio - Manovre in corso", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
+    {"sintomi": "Sospetto ICTUS (Stroke) - Afasia", "codice_reale": "ROSSO", "tipo": "Neuro", "necessita_msa": True},
+    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Infortunio sul Lavoro - Schiacciamento", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "necessita_msa": False},
+    {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "necessita_msa": False},
+    {"sintomi": "Paziente anziano con febbre alta e astenia", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False}
 ]
 
 tempo_base = 120
