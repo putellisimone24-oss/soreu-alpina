@@ -575,7 +575,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                 else:
                                     st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
                                 
-                                # 2. Invio ai VVF (Interforze)
+                           # 2. Invio ai VVF (Interforze)
                                 keywords_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato", "Annegamento"]
                                 if any(p in ev['sintomi'] for p in keywords_vvf):
                                     try:
@@ -588,10 +588,9 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                     except:
                                         pass
 
-                               # 3. Ciclo Assegnazione Mezzi
+                                # 3. Ciclo Assegnazione Mezzi
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
-                                        # <--- QUESTE RIGHE DEVONO ESSERE PIÙ A DESTRA DELL'IF
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
                                         st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                         try:
@@ -599,7 +598,6 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                         except:
                                             pass
                                     
-                                    # Questa riga invece deve tornare sotto l'IF (stessa colonna dell'IF)
                                     st.session_state.missioni[m_scelto] = {
                                         "target": f"{ev['via']}, {ev['comune']}", 
                                         "lat": ev['lat'], 
@@ -611,24 +609,10 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                         "patologia": ev.get("sintomi", "Generica")
                                     }
                                 
-                                # 4. Reset Evento
+                                # 4. Reset Evento e Chiusura Scheda
                                 st.session_state.evento_corrente = None
                                 st.rerun()
-                       
-                                for m_scelto in mezzi_scelti:
-                                    if not st.session_state.auto_mode:
-                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
-                                    aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
-                                st.session_state.missioni[m_scelto] = {
-                                    "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
-                                    "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
-                                    "timestamp_creazione": time.time(), "richiesto_ospedale": False,
-                                    "patologia": ev.get("sintomi", "Generica")
-                                }
-                            st.session_state.evento_corrente = None; st.rerun()
-                    else: st.error("Nessun mezzo disponibile!")
-                else: st.info("In attesa di chiamata da NUE 112...")
-                    
+    
             with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
