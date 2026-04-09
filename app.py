@@ -15,7 +15,7 @@ def init_db():
     # Tabella Utenti
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
-    # Tabella VVF
+    # Tabella VVF Comune
     c.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
     
@@ -38,75 +38,113 @@ def get_utente_db(username):
     conn.close()
     return res
 
+def aggiorna_password_db(username, nuova_pw):
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
+    conn.commit()
+    conn.close()
+
 init_db()
 
 # =========================================================
-# 2. LOGIN E SESSIONE (Sincronizzato)
+# 2. LOGIN E SESSIONE
 # =========================================================
 st.set_page_config(page_title="SOREU Alpina - Simulatore 118", layout="wide")
 
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
 if 'ruolo' not in st.session_state: st.session_state.ruolo = None
+if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 
 if st.session_state.utente_connesso is None:
     st.title("🔐 SOREU Alpina - Login")
-    u_in = st.text_input("Username").lower().strip()
-    p_in = st.text_input("Password", type="password")
-    if st.button("ACCEDI", type="primary"):
-        user_data = get_utente_db(u_in)
-        if user_data and user_data[1] == p_in:
-            st.session_state.utente_connesso = u_in
-            st.session_state.ruolo = user_data[3] # Fondamentale: Admin o Operatore
-            st.rerun()
-        else: st.error("Credenziali errate.")
+    if st.session_state.fase_cambio_pw:
+        st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
+        n_p = st.text_input("Nuova Password", type="password")
+        c_p = st.text_input("Conferma Password", type="password")
+        if st.button("SALVA E ACCEDI"):
+            if n_p == c_p and len(n_p) >= 4:
+                aggiorna_password_db(st.session_state.temp_user, n_p)
+                u_info = get_utente_db(st.session_state.temp_user)
+                st.session_state.utente_connesso = st.session_state.temp_user
+                st.session_state.ruolo = u_info[3]
+                st.rerun()
+            else: st.error("Errore password (minimo 4 caratteri).")
+    else:
+        u_in = st.text_input("Username").lower().strip()
+        p_in = st.text_input("Password", type="password")
+        if st.button("ACCEDI", type="primary"):
+            user_data = get_utente_db(u_in)
+            if user_data and user_data[1] == p_in:
+                if user_data[2] == 1:
+                    st.session_state.fase_cambio_pw = True
+                    st.session_state.temp_user = u_in
+                    st.rerun()
+                else:
+                    st.session_state.utente_connesso = u_in
+                    st.session_state.ruolo = user_data[3]
+                    st.rerun()
+            else: st.error("ID o Password errati.")
     st.stop()
-    with tab_risorse:
-            st.header("🚑 Stato Risorse Territoriali")
-            
-            # --- SEZIONE MEZZI (Sempre visibile) ---
-            for m, d in st.session_state.database_mezzi.items():
-                st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
 
-            # --- SEZIONE ADMIN (Appare solo se ruolo è Admin) ---
-            if st.session_state.ruolo == "Admin":
-                st.divider()
-                st.subheader("👥 Gestione Account Operatori (Pannello Admin)")
-                
-                conn = sqlite3.connect('centrale.db')
-                df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
-                conn.close()
-                
-                st.write("Utenti registrati:")
-                st.dataframe(df_u, use_container_width=True, hide_index=True)
+# =========================================================
+# 3. INTERFACCIA PRINCIPALE (TABS)
+# =========================================================
+tab_centrale, tab_radio, tab_mezzi, tab_risorse = st.tabs([
+    "🖥️ Centrale Operativa", "📻 Comunicazioni Radio", "🚑 Gestione Mezzi", "👥 Risorse e Account"
+])
 
-                c1, c2 = st.columns(2)
-                with c1:
-                    with st.expander("➕ Aggiungi Utente"):
-                        nu = st.text_input("Username Nuovo", key="nu").lower().strip()
-                        np = st.text_input("Password Iniziale", type="password", key="np")
-                        nr = st.selectbox("Ruolo", ["Operatore", "Admin"], key="nr")
-                        if st.button("REGISTRA"):
-                            if nu and np:
-                                conn = sqlite3.connect('centrale.db')
-                                try:
-                                    conn.execute("INSERT INTO utenti VALUES (?,?,?,?)", (nu, np, 0, nr))
-                                    conn.commit()
-                                    st.success(f"Creato {nu}!")
-                                    st.rerun()
-                                except: st.error("Username già esistente.")
-                                finally: conn.close()
-                
-                with c2:
-                    with st.expander("❌ Rimuovi Utente"):
-                        u_del = st.selectbox("Seleziona utente", df_u['username'].tolist(), key="u_del")
-                        if st.button("ELIMINA ACCOUNT", type="primary"):
-                            if u_del != "admin":
-                                conn = sqlite3.connect('centrale.db')
-                                conn.execute("DELETE FROM utenti WHERE username=?", (u_del,))
-                                conn.commit()
-                                conn.close()
-                                st.rerun()
-                            else: st.warning("L'admin principale non si può eliminare!")
+with tab_centrale:
+    st.subheader(f"Operatore: {st.session_state.utente_connesso.upper()} ({st.session_state.ruolo})")
+    # Qui inserisci il tuo codice per generare eventi e inviare mezzi
+    st.info("Logica della Centrale Operativa attiva.")
+
+with tab_risorse:
+    st.header("🚑 Risorse e Gestione Account")
+    
+    # Sezione Admin
+    if st.session_state.ruolo == "Admin":
+        st.divider()
+        st.subheader("🛠️ Pannello Amministratore")
+        
+        conn = sqlite3.connect('centrale.db')
+        df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
+        conn.close()
+        
+        st.write("Lista Utenti:")
+        st.dataframe(df_u, use_container_width=True, hide_index=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            with st.expander("➕ Aggiungi Nuovo Operatore"):
+                nu = st.text_input("Nuovo Username", key="nu").lower().strip()
+                np = st.text_input("Password Temp", type="password", key="np")
+                nr = st.selectbox("Ruolo", ["Operatore", "Admin"], key="nr")
+                if st.button("REGISTRA UTENTE"):
+                    if nu and np:
+                        conn = sqlite3.connect('centrale.db')
+                        try:
+                            conn.execute("INSERT INTO utenti VALUES (?,?,?,?)", (nu, np, 1, nr))
+                            conn.commit()
+                            st.success(f"Utente {nu} creato!")
+                            st.rerun()
+                        except: st.error("Username esistente.")
+                        finally: conn.close()
+
+        with c2:
+            with st.expander("❌ Elimina Utente"):
+                u_list = df_u['username'].tolist()
+                u_del = st.selectbox("Utente da rimuovere", u_list, key="u_del")
+                if st.button("ELIMINA DEFINITIVAMENTE", type="primary"):
+                    if u_del != "admin":
+                        conn = sqlite3.connect('centrale.db')
+                        conn.execute("DELETE FROM utenti WHERE username=?", (u_del,))
+                        conn.commit()
+                        conn.close()
+                        st.rerun()
+                    else: st.warning("Impossibile eliminare l'Admin.")
+    else:
+        st.info("Accesso limitato alle risorse. Pannello Admin non disponibile.")
                                 
 
 # =========================================================
