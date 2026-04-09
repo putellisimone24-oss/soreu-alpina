@@ -155,15 +155,64 @@ if 'database_mezzi' not in st.session_state:
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
             "sede": "Volontari Treviolo", "lat": 45.6730, "lon": 9.6100
         }
+
+    # --- NUOVA AREA BRESCIA (Soreu Valpadana) ---
+        "MSA 2 BRESCIA 1": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
+            "sede": "Automedica Spedali Civili BS", "lat": 45.5510, "lon": 10.2280
+        },
+        "MSA 2 DESENZANO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
+            "sede": "Automedica Ospedale Desenzano", "lat": 45.4740, "lon": 10.5120
+        },
+        "MSA 1 MANERBIO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
+            "sede": "CRI Manerbio (Infermiere)", "lat": 45.3580, "lon": 10.1350
+        },
+        "ELI BRESCIA": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
+            "sede": "Base Elisoccorso Brescia", "lat": 45.5680, "lon": 10.2350
+        },
+        "CRIBRE_301.C": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI Brescia - Via Berardo Maggi", "lat": 45.5350, "lon": 10.2150
+        },
+        "GARDA_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Volontari del Garda - Salò", "lat": 45.6020, "lon": 10.5150
+        },
+        "CROCE_GALLO_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Croce Gialla Brescia", "lat": 45.5120, "lon": 10.2520
+        },
+        "CAMONICA_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Arnica Berzo Inferiore", "lat": 45.8850, "lon": 10.1820
+        },
+        "CRI_PALAZZOLO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI Palazzolo sull'Oglio", "lat": 45.5980, "lon": 9.8850
+        }
     }
 
 # 2. DATABASE OSPEDALI REALI
 if 'database_ospedali' not in st.session_state:
     st.session_state.database_ospedali = {
-        "Osp. Papa Giovanni XXIII (BG)": {"pazienti": 0, "max": 12, "hub": True},
-        "Osp. Treviglio-Caravaggio": {"pazienti": 0, "max": 6, "hub": False},
-        "Osp. Romano di Lombardia": {"pazienti": 0, "max": 4, "hub": False},
-        "Cliniche Gavazzeni (BG)": {"pazienti": 0, "max": 5, "hub": False}
+        "Osp. Papa Giovanni XXIII (BG)": {"pazienti": 0, "max": 15, "tipo": "DEA II - Trauma Center"},
+        "Osp. Humanitas Gavazzeni (BG)": {"pazienti": 0, "max": 8, "tipo": "DEA I - Cardio"},
+        "Osp. Bolognini Seriate": {"pazienti": 0, "max": 10, "tipo": "DEA I"},
+        "Osp. Treviglio-Caravaggio": {"pazienti": 0, "max": 10, "tipo": "DEA I"},
+        "Osp. San Filippo Neri (Lovere)": {"pazienti": 0, "max": 5, "tipo": "PS"},
+        "Osp. Pesenti Fenaroli (Alzano)": {"pazienti": 0, "max": 6, "tipo": "PS"},
+    # --- AREA BRESCIA ---
+        "ASST Spedali Civili Brescia": {"pazienti": 0, "max": 20, "tipo": "DEA II - Trauma/Ustioni"},
+        "Osp. Fondazione Poliambulanza (BS)": {"pazienti": 0, "max": 15, "tipo": "DEA I - Cardio/Ictus"},
+        "Osp. Sant'Anna (Brescia)": {"pazienti": 0, "max": 8, "tipo": "DEA I"},
+        "Osp. Desenzano del Garda": {"pazienti": 0, "max": 10, "tipo": "DEA I"},
+        "Osp. Manerbio": {"pazienti": 0, "max": 8, "tipo": "DEA I"},
+        "Osp. Esine (Val Camonica)": {"pazienti": 0, "max": 7, "tipo": "DEA I"},
+        "Osp. Gavardo": {"pazienti": 0, "max": 7, "tipo": "DEA I"},
+        "Osp. Chiari": {"pazienti": 0, "max": 8, "tipo": "DEA I"}
     }
 
 database_mail = [
@@ -274,6 +323,16 @@ database_indirizzi = [
     {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
     {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
     {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071}
+    
+# --- ZONA BRESCIA ---
+    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
+    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
+    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
+    {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
+    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto Gabriele D'Annunzio", "lat": 45.428, "lon": 10.330},
+    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
+    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
+    {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
 ]
 
 scenari_clinici = [
