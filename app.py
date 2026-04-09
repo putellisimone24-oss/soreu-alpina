@@ -100,8 +100,11 @@ with tab_centrale:
 
 with tab_mezzi:
     st.header("🚑 Monitoraggio Mezzi")
-    # Inserisci qui il tuo codice per lo stato dei mezzi
-
+    
+     # Elenco mezzi semplice (Per tutti)
+    if 'database_mezzi' in st.session_state:
+        for m, d in st.session_state.database_mezzi.items():
+            st.write(f"**{m}**: {d['stato']}")
 with tab_risorse:
     st.header("🚑 Stato Risorse Territoriali")
     
