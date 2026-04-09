@@ -7,11 +7,14 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. CONFIGURAZIONE PAGINA E STATO (PRIMA DI TUTTO)
+# 1. CONFIGURAZIONE PAGINA
 # =========================================================
 st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
 
-# Inizializzazione manuale e diretta (Evita NameError)
+# =========================================================
+# 2. INIZIALIZZAZIONE STATO (MANUALE E IMMEDIATA)
+# =========================================================
+# Inizializziamo subito per evitare AttributeError
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
 if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
 if 'ruolo' not in st.session_state: st.session_state.ruolo = None
@@ -21,12 +24,34 @@ if 'last_mission_time' not in st.session_state: st.session_state.last_mission_ti
 if 'auto_mission_active' not in st.session_state: st.session_state.auto_mission_active = False
 if 'freq_missioni' not in st.session_state: st.session_state.freq_missioni = 60
 if 'registro_radio' not in st.session_state: st.session_state.registro_radio = []
-if 'notifiche_centrale' not in st.session_state: st.session_state.notifiche_centrale = []
 if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 
 # =========================================================
-# 2. DATABASE UTENTI
+# 3. FUNZIONI GLOBALI (DEFINITE PRIMA DELL'USO)
 # =========================================================
+
+def genera_missione_casuale():
+    """Genera una missione casuale e la salva nello stato"""
+    comuni = ["Bergamo", "Seriate", "Dalmine", "Stezzano", "Osio Sotto", "Treviolo"]
+    vie = ["Via Roma", "Viale Papa Giovanni XXIII", "Via Baioni", "Piazza Vecchia"]
+    scenari = [
+        {"sintomi": "Arresto Cardiaco", "codice": "ROSSO"},
+        {"sintomi": "Trauma Stradale", "codice": "ROSSO"},
+        {"sintomi": "Perdita di coscienza", "codice": "GIALLO"},
+        {"sintomi": "Malore generico", "codice": "VERDE"}
+    ]
+    scelta = random.choice(scenari)
+    st.session_state.evento_corrente = {
+        "comune": random.choice(comuni),
+        "via": f"{random.choice(vie)}, {random.randint(1, 100)}",
+        "lat": 45.69 + random.uniform(-0.05, 0.05),
+        "lon": 9.66 + random.uniform(-0.05, 0.05),
+        "sintomi": scelta["sintomi"],
+        "codice": scelta["codice"]
+    }
+    st.session_state.last_mission_time = time.time()
+    st.toast(f"🚨 NUOVA CHIAMATA: {scelta['codice']}")
+
 def gestione_db(azione, dati=None):
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
@@ -51,11 +76,14 @@ def gestione_db(azione, dati=None):
     conn.commit()
     conn.close()
 
+# Esegui init DB
 gestione_db("init")
 
 # =========================================================
-# 3. LOGICA DI ACCESSO
+# 4. LOGICA DI ACCESSO E UI
 # =========================================================
+
+# --- SCHERMATA LOGIN ---
 if st.session_state.utente_connesso is None:
     st.title("🚑 SOREU Alpina - Accesso")
     u = st.text_input("Username").lower().strip()
@@ -65,214 +93,70 @@ if st.session_state.utente_connesso is None:
         if user and user[1] == p:
             st.session_state.utente_connesso = u
             st.rerun()
-        else:
-            st.error("Credenziali non valide")
-    st.stop()
-# =========================================================
-# 3. LOGIN E SICUREZZA
-# =========================================================
-if st.session_state.utente_connesso is None:
-    st.title("🔐 SOREU Alpina - Login")
-    if st.session_state.fase_cambio_pw:
-        st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
-        n_p = st.text_input("Nuova Password", type="password")
-        c_p = st.text_input("Conferma Password", type="password")
-        if st.button("SALVA E ACCEDI"):
-            if n_p == c_p and len(n_p) >= 4:
-                aggiorna_password_db(st.session_state.temp_user, n_p)
-                st.session_state.utente_connesso = st.session_state.temp_user
-                st.rerun()
-            else: st.error("Errore password (min. 4 car.)")
-    else:
-        u_in = st.text_input("Username").lower().strip()
-        p_in = st.text_input("Password", type="password")
-        if st.button("ACCEDI", type="primary"):
-            user_data = get_utente_db(u_in)
-            if user_data and user_data[1] == p_in:
-                if user_data[2] == 1:
-                    st.session_state.fase_cambio_pw = True
-                    st.session_state.temp_user = u_in
-                    st.rerun()
-                else:
-                    st.session_state.utente_connesso = u_in
-                    st.rerun()
-            else: st.error("Accesso negato.")
+        else: st.error("Credenziali errate")
     st.stop()
 
-# =========================================================
-# 1. GESTIONE DATABASE PERSISTENTE (SQLITE) - AGGIUNTO
-# =========================================================
-def init_db():
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS utenti 
-                 (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
-    
-    c.execute("SELECT COUNT(*) FROM utenti")
-    if c.fetchone()[0] == 0:
-        utenti_iniziali = [
-            ('admin', 'admin', 0, 'Admin'),
-            ('simone.putelli', 'simone', 1, 'Operatore'),
-            ('simone.marinoni', 'simone', 1, 'Operatore'),
-            ('andrea.giuliano', 'andrea', 1, 'Operatore')
-        ]
-        c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
-    conn.commit()
-    conn.close()
-
-def get_tutti_utenti():
-    conn = sqlite3.connect('centrale.db')
-    df = pd.read_sql_query("SELECT username, ruolo, cambio_obbligatorio FROM utenti", conn)
-    conn.close()
-    return df
-
-def aggiungi_utente(u, p, r):
-    try:
-        conn = sqlite3.connect('centrale.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO utenti VALUES (?,?,1,?)", (u.lower().strip(), p, r))
-        conn.commit()
-        conn.close()
-        return True
-    except: return False
-
-def elimina_utente(u):
-    if u == 'admin': return False
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM utenti WHERE username=?", (u,))
-    conn.commit()
-    conn.close()
-    return True
-
-def get_utente_db(username):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("SELECT username, password, cambio_obbligatorio, ruolo FROM utenti WHERE username=?", (username,))
-    res = c.fetchone()
-    conn.close()
-    return res
-
-def aggiorna_password_db(username, nuova_pw):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
-    conn.commit()
-    conn.close()
-
-# =========================================================
-# 2. SCHERMATA LOGIN (PRIMA DI TUTTO IL RESTO)
-# =========================================================
-st.set_page_config(page_title="SOREU Alpina - Simulatore 118", layout="wide")
-
-if 'utente_connesso' not in st.session_state:
-    st.session_state.utente_connesso = None
-if 'fase_cambio_pw' not in st.session_state:
-    st.session_state.fase_cambio_pw = False
-
-if st.session_state.utente_connesso is None:
-    st.title("🔐 SOREU Alpina - Login")
-    if st.session_state.fase_cambio_pw:
-        st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
-        n_p = st.text_input("Nuova Password", type="password")
-        c_p = st.text_input("Conferma Password", type="password")
-        if st.button("SALVA E ACCEDI"):
-            if n_p == c_p and len(n_p) >= 4:
-                aggiorna_password_db(st.session_state.temp_user, n_p)
-                st.session_state.utente_connesso = st.session_state.temp_user
-                st.rerun()
-            else: st.error("Errore nelle password (minimo 4 caratteri).")
-    else:
-        u_in = st.text_input("Username").lower().strip()
-        p_in = st.text_input("Password", type="password")
-        if st.button("ACCEDI", type="primary"):
-            user_data = get_utente_db(u_in)
-            if user_data and user_data[1] == p_in:
-                if user_data[2] == 1:
-                    st.session_state.fase_cambio_pw = True
-                    st.session_state.temp_user = u_in
-                    st.rerun()
-                else:
-                    st.session_state.utente_connesso = u_in
-                    st.rerun()
-            else: st.error("ID o Password errati.")
-    st.stop() # Blocca il resto del codice finché non sei loggato
-    # =========================================================
-# 4. INTERFACCIA ADMIN / CENTRALE
-# =========================================================
+# --- SELEZIONE POSTAZIONE / GESTIONE ADMIN ---
 if st.session_state.scrivania_selezionata is None:
-    st.title(f"Benvenuto, {st.session_state.utente_connesso.upper()}")
+    st.title(f"Operatore: {st.session_state.utente_connesso.upper()}")
     
-    # --- SEZIONE ESCLUSIVA ADMIN: GESTIONE ACCESSI ---
     if st.session_state.utente_connesso == 'admin':
-        with st.expander("🛠️ PANNELLO GESTIONE ACCESSI (ADMIN ONLY)"):
-            st.subheader("Lista Operatori")
-            df_utenti = get_tutti_utenti()
-            st.dataframe(df_utenti, use_container_width=True)
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                st.write("➕ **Aggiungi Operatore**")
-                new_u = st.text_input("Nuovo Username")
-                new_p = st.text_input("Password Iniziale", type="password")
-                new_r = st.selectbox("Ruolo", ["Operatore", "Equipaggio"])
-                if st.button("REGISTRA UTENTE"):
-                    if aggiungi_utente(new_u, new_p, new_r):
-                        st.success(f"Utente {new_u} creato!"); st.rerun()
-                    else: st.error("Errore: Username già esistente.")
-            
-            with c2:
-                st.write("🗑️ **Rimuovi Operatore**")
-                u_da_eliminare = st.selectbox("Seleziona utente", df_utenti['username'].tolist())
-                if st.button("ELIMINA ACCOUNT", type="primary"):
-                    if elimina_utente(u_da_eliminare):
-                        st.success("Utente eliminato!"); st.rerun()
-                    else: st.error("Non puoi eliminare l'account admin master.")
+        with st.expander("🛠️ PANNELLO ADMIN (Gestione Accessi)"):
+            nu = st.text_input("Nuovo Operatore")
+            np = st.text_input("Password")
+            if st.button("Crea Utente"):
+                gestione_db("aggiungi", (nu.lower().strip(), np))
+                st.success("Utente creato con successo!")
 
-    st.divider()
-    st.subheader("🖥️ Selezione Postazione")
+    st.subheader("Scegli Scrivania:")
     cols = st.columns(3)
     for i in range(1, 10):
         with cols[(i-1)%3]:
-            label = "ADMIN" if st.session_state.utente_connesso == "admin" else f"Scrivania {i}"
-            if st.button(f"🖥️ {label}", use_container_width=True):
-                st.session_state.scrivania_selezionata = label; st.session_state.ruolo = "centrale"; st.rerun()
-    if st.button("🚑 Accesso Equipaggio", use_container_width=True):
-        st.session_state.scrivania_selezionata = "MEZZO"; st.session_state.ruolo = "mezzo"; st.rerun()
+            txt = "ADMIN" if st.session_state.utente_connesso == 'admin' else f"DESK {i}"
+            if st.button(f"🖥️ {txt}", use_container_width=True):
+                st.session_state.scrivania_selezionata = txt
+                st.session_state.ruolo = "centrale"
+                st.rerun()
+    st.stop()
 
+# --- CENTRALE OPERATIVA ---
+with st.sidebar:
+    st.header(st.session_state.utente_connesso.upper())
+    st.write(f"Postazione: {st.session_state.scrivania_selezionata}")
+    if st.button("Logout"):
+        st.session_state.scrivania_selezionata = None
+        st.rerun()
+    
+    st.divider()
+    st.session_state.auto_mission_active = st.toggle("🚨 Generatore Missioni", st.session_state.auto_mission_active)
+    if st.session_state.auto_mission_active:
+        st.session_state.freq_missioni = st.slider("Secondi", 20, 120, 60)
+        cd = int(st.session_state.freq_missioni - (time.time() - st.session_state.last_mission_time))
+        st.info(f"Prossima chiamata: {max(0, cd)}s")
+        if cd <= 0 and not st.session_state.evento_corrente:
+            genera_missione_casuale() # Ora la funzione è definita e visibile!
+            st.rerun()
+
+st.title("SOREU Alpina - Sala Operativa")
+if not st.session_state.turno_iniziato:
+    if st.button("🟢 APRI TURNO", type="primary", use_container_width=True):
+        st.session_state.turno_iniziato = True
+        st.rerun()
 else:
-    # --- DASHBOARD OPERATIVA ---
-    with st.sidebar:
-        st.header(f"👤 {st.session_state.utente_connesso.upper()}")
-        if st.button("⬅️ LOGOUT/CAMBIA"):
-            st.session_state.scrivania_selezionata = None; st.rerun()
-        
-        if st.session_state.ruolo == "centrale":
-            st.divider()
-            st.session_state.auto_mission_active = st.toggle("🚨 Generatore Missioni", st.session_state.auto_mission_active)
-            if st.session_state.auto_mission_active:
-                st.session_state.freq_missioni = st.slider("Secondi", 30, 300, 60)
-                if time.time() - st.session_state.last_mission_time > st.session_state.freq_missioni:
-                    genera_missione_casuale(); st.rerun()
-
-    if st.session_state.ruolo == "centrale":
-        st.header(f"Centrale Operativa - {st.session_state.scrivania_selezionata}")
-        if not st.session_state.turno_iniziato:
-            if st.button("INIZIA TURNO", type="primary"): st.session_state.turno_iniziato = True; st.rerun()
-        else:
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                st.subheader("☎️ Chiamate")
-                if st.session_state.evento_corrente:
-                    ev = st.session_state.evento_corrente
-                    st.error(f"TARGET: {ev['comune']} - {ev['codice_reale']}")
-                    st.write(f"Via: {ev['via']}")
-                    if st.button("ASSEGNA"): st.session_state.evento_corrente = None; st.rerun()
-                else: st.write("In attesa...")
-            with col2:
-                st.subheader("🗺️ Mappa Territorio")
-                st.map()
-
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        st.subheader("Chiamate in arrivo")
+        if st.session_state.evento_corrente:
+            ev = st.session_state.evento_corrente
+            st.error(f"EMERGENZA: {ev['codice']} - {ev['comune']}")
+            st.write(f"Indirizzo: {ev['via']}")
+            if st.button("GESTITO"):
+                st.session_state.evento_corrente = None
+                st.rerun()
+        else: st.success("Nessuna chiamata")
+    with c2:
+        st.subheader("Mappa")
+        st.map()
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
 # =========================================================
