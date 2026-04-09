@@ -615,7 +615,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
 
             # --- CORREZIONE INDENTAZIONE ---
             # Questo blocco deve essere allineato con il "with col_info:" (o colonna precedente)
-            with col_mappa:
+ with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
                 
