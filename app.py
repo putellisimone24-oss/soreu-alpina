@@ -573,21 +573,19 @@ else:
                                 else:
                                     st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
                                     
-                                # --- AGGIUNTO PER INTERFORZE: Notifica ai VVF ---
+                                # Notifica Interforze ai VVF
                                 parole_chiave_vvf = ["Incidente", "Incendio", "Schiacciamento", "Annegamento", "Incastrato"]
                                 if any(parola in ev['sintomi'] for parola in parole_chiave_vvf):
                                     try:
                                         conn = sqlite3.connect('centrale.db')
                                         c = conn.cursor()
                                         c.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
-                                                 (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico urgente."))
+                                                 (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico."))
                                         conn.commit()
                                         conn.close()
-                                        st.toast("🚒 Scheda inviata automaticamente ai Vigili del Fuoco!", icon="🔥")
-                                    except Exception as e:
-                                        st.error(f"Errore database VVF: {e}")
+                                    except:
+                                        pass
 
-                                # Ciclo assegnazione mezzi (Qui c'era l'errore di indentazione)
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
@@ -596,15 +594,13 @@ else:
                                     
                                     st.session_state.missioni[m_scelto] = {
                                         "target": f"{ev['via']}, {ev['comune']}", 
-                                        "lat": ev['lat'], 
-                                        "lon": ev['lon'],
+                                        "lat": ev['lat'], "lon": ev['lon'],
                                         "codice": codice_scelto, 
                                         "ospedale_assegnato": osp_selezionato,
                                         "timestamp_creazione": time.time(), 
                                         "richiesto_ospedale": False,
                                         "patologia": ev.get("sintomi", "Generica")
                                     }
-                                
                                 st.session_state.evento_corrente = None
                                 st.rerun()
                                 
