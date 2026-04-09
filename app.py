@@ -85,29 +85,6 @@ if st.session_state.utente_connesso is None:
             else: st.error("ID o Password errati.")
     st.stop()
 
-# =========================================================
-# 3. INTERFACCIA A TAB (COMUNICAZIONI RIMOSSA)
-# =========================================================
-tab_centrale, tab_mezzi, tab_risorse = st.tabs([
-    "🖥️ Centrale Operativa", 
-    "🚑 Gestione Mezzi",
-    "👥 Risorse e Account"
-])
-
-with tab_centrale:
-    st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
-    # Inserisci qui il tuo codice originale per la gestione eventi
-
-with tab_risorse:
- st.header("🚑 Stato Risorse Territoriali")
-    
-     # Elenco mezzi semplice (Per tutti)
-    if 'database_mezzi' in st.session_state:
-        for m, d in st.session_state.database_mezzi.items():
-            st.write(f"**{m}**: {d['stato']}")
-with tab_risorse:
-
-
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
     if st.session_state.ruolo == "Admin":
         st.divider()
