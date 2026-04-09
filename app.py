@@ -99,7 +99,7 @@ with tab_centrale:
     # Inserisci qui il tuo codice originale per la gestione eventi
     
     with tab_risorse:
-    st.header("🚑 Stato Risorse Territoriali")
+st.header("🚑 Stato Risorse Territoriali")
     
      # Elenco mezzi semplice (Per tutti)
     if 'database_mezzi' in st.session_state:
