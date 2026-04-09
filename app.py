@@ -104,6 +104,81 @@ if st.session_state.utente_connesso is None:
                     st.rerun()
             else: st.error("ID o Password errati.")
     st.stop() # Blocca il resto del codice finché non sei loggato
+    # =========================================================
+# 4. INTERFACCIA ADMIN / CENTRALE
+# =========================================================
+if st.session_state.scrivania_selezionata is None:
+    st.title(f"Benvenuto, {st.session_state.utente_connesso.upper()}")
+    
+    # --- SEZIONE ESCLUSIVA ADMIN: GESTIONE ACCESSI ---
+    if st.session_state.utente_connesso == 'admin':
+        with st.expander("🛠️ PANNELLO GESTIONE ACCESSI (ADMIN ONLY)"):
+            st.subheader("Lista Operatori")
+            df_utenti = get_tutti_utenti()
+            st.dataframe(df_utenti, use_container_width=True)
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write("➕ **Aggiungi Operatore**")
+                new_u = st.text_input("Nuovo Username")
+                new_p = st.text_input("Password Iniziale", type="password")
+                new_r = st.selectbox("Ruolo", ["Operatore", "Equipaggio"])
+                if st.button("REGISTRA UTENTE"):
+                    if aggiungi_utente(new_u, new_p, new_r):
+                        st.success(f"Utente {new_u} creato!"); st.rerun()
+                    else: st.error("Errore: Username già esistente.")
+            
+            with c2:
+                st.write("🗑️ **Rimuovi Operatore**")
+                u_da_eliminare = st.selectbox("Seleziona utente", df_utenti['username'].tolist())
+                if st.button("ELIMINA ACCOUNT", type="primary"):
+                    if elimina_utente(u_da_eliminare):
+                        st.success("Utente eliminato!"); st.rerun()
+                    else: st.error("Non puoi eliminare l'account admin master.")
+
+    st.divider()
+    st.subheader("🖥️ Selezione Postazione")
+    cols = st.columns(3)
+    for i in range(1, 10):
+        with cols[(i-1)%3]:
+            label = "ADMIN" if st.session_state.utente_connesso == "admin" else f"Scrivania {i}"
+            if st.button(f"🖥️ {label}", use_container_width=True):
+                st.session_state.scrivania_selezionata = label; st.session_state.ruolo = "centrale"; st.rerun()
+    if st.button("🚑 Accesso Equipaggio", use_container_width=True):
+        st.session_state.scrivania_selezionata = "MEZZO"; st.session_state.ruolo = "mezzo"; st.rerun()
+
+else:
+    # --- DASHBOARD OPERATIVA ---
+    with st.sidebar:
+        st.header(f"👤 {st.session_state.utente_connesso.upper()}")
+        if st.button("⬅️ LOGOUT/CAMBIA"):
+            st.session_state.scrivania_selezionata = None; st.rerun()
+        
+        if st.session_state.ruolo == "centrale":
+            st.divider()
+            st.session_state.auto_mission_active = st.toggle("🚨 Generatore Missioni", st.session_state.auto_mission_active)
+            if st.session_state.auto_mission_active:
+                st.session_state.freq_missioni = st.slider("Secondi", 30, 300, 60)
+                if time.time() - st.session_state.last_mission_time > st.session_state.freq_missioni:
+                    genera_missione_casuale(); st.rerun()
+
+    if st.session_state.ruolo == "centrale":
+        st.header(f"Centrale Operativa - {st.session_state.scrivania_selezionata}")
+        if not st.session_state.turno_iniziato:
+            if st.button("INIZIA TURNO", type="primary"): st.session_state.turno_iniziato = True; st.rerun()
+        else:
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                st.subheader("☎️ Chiamate")
+                if st.session_state.evento_corrente:
+                    ev = st.session_state.evento_corrente
+                    st.error(f"TARGET: {ev['comune']} - {ev['codice_reale']}")
+                    st.write(f"Via: {ev['via']}")
+                    if st.button("ASSEGNA"): st.session_state.evento_corrente = None; st.rerun()
+                else: st.write("In attesa...")
+            with col2:
+                st.subheader("🗺️ Mappa Territorio")
+                st.map()
 
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
