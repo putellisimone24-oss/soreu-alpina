@@ -301,7 +301,7 @@ if st.session_state.auto_mode and st.session_state.missioni and st.session_state
     aggiorna_stati_automatici()
 
 # DATABASE EVENTI CLINICI
-  database_indirizzi = [
+    database_indirizzi = [
         {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
         {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
         {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
