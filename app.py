@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. DATABASE E TABELLE (AVVIO SICURO)
+# 1. DATABASE E INIZIALIZZAZIONE
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
@@ -15,7 +15,7 @@ def init_db():
     # Tabella Utenti
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
-    # Tabella VVF Comune
+    # Tabella VVF (Ponte comune)
     c.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
     
@@ -88,63 +88,82 @@ if st.session_state.utente_connesso is None:
     st.stop()
 
 # =========================================================
-# 3. INTERFACCIA PRINCIPALE (TABS)
+# 3. INTERFACCIA TABS
 # =========================================================
 tab_centrale, tab_radio, tab_mezzi, tab_risorse = st.tabs([
     "🖥️ Centrale Operativa", "📻 Comunicazioni Radio", "🚑 Gestione Mezzi", "👥 Risorse e Account"
 ])
 
-with tab_centrale:
-    st.subheader(f"Operatore: {st.session_state.utente_connesso.upper()} ({st.session_state.ruolo})")
-    # Qui inserisci il tuo codice per generare eventi e inviare mezzi
-    st.info("Logica della Centrale Operativa attiva.")
+# (Nota: qui andrebbe il tuo codice per le altre tab...)
 
 with tab_risorse:
-    st.header("🚑 Risorse e Gestione Account")
+    st.header("🚑 Stato Risorse Territoriali")
     
-    # Sezione Admin
+    # --- VISUALIZZAZIONE MEZZI (Per TUTTI) ---
+    # (Esempio basato sul tuo codice mezzi)
+    if 'database_mezzi' in st.session_state:
+        for m, d in st.session_state.database_mezzi.items():
+            st.write(f"**{m}**: {d['stato']}")
+    else:
+        st.info("Nessun mezzo caricato in sessione.")
+
+    # --- PROTEZIONE ADMIN: VISIBILE SOLO SE RUOLO == ADMIN ---
     if st.session_state.ruolo == "Admin":
         st.divider()
-        st.subheader("🛠️ Pannello Amministratore")
+        st.title("🛡️ Gestione Account (Riservato Admin)")
         
+        # Recupero dati dal DB
         conn = sqlite3.connect('centrale.db')
-        df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
+        df_utenti = pd.read_sql_query("SELECT username, ruolo, cambio_obbligatorio FROM utenti", conn)
         conn.close()
         
-        st.write("Lista Utenti:")
-        st.dataframe(df_u, use_container_width=True, hide_index=True)
+        st.write("Tabellone Utenti Registrati:")
+        st.dataframe(df_utenti, use_container_width=True, hide_index=True)
 
-        c1, c2 = st.columns(2)
-        with c1:
-            with st.expander("➕ Aggiungi Nuovo Operatore"):
-                nu = st.text_input("Nuovo Username", key="nu").lower().strip()
-                np = st.text_input("Password Temp", type="password", key="np")
+        col_add, col_del = st.columns(2)
+
+        with col_add:
+            with st.expander("➕ Aggiungi Nuovo Utente"):
+                nu = st.text_input("Username", key="nu").lower().strip()
+                np = st.text_input("Password", type="password", key="np")
                 nr = st.selectbox("Ruolo", ["Operatore", "Admin"], key="nr")
-                if st.button("REGISTRA UTENTE"):
+                if st.button("CREA ACCOUNT"):
                     if nu and np:
                         conn = sqlite3.connect('centrale.db')
                         try:
+                            # 1 = obbligo cambio password al primo login
                             conn.execute("INSERT INTO utenti VALUES (?,?,?,?)", (nu, np, 1, nr))
                             conn.commit()
                             st.success(f"Utente {nu} creato!")
                             st.rerun()
-                        except: st.error("Username esistente.")
+                        except: st.error("Username già esistente.")
                         finally: conn.close()
 
-        with c2:
-            with st.expander("❌ Elimina Utente"):
-                u_list = df_u['username'].tolist()
-                u_del = st.selectbox("Utente da rimuovere", u_list, key="u_del")
+        with col_del:
+            with st.expander("❌ Elimina / Reset Password"):
+                u_list = df_utenti['username'].tolist()
+                u_sel = st.selectbox("Seleziona Utente", u_list, key="u_sel")
+                
+                if st.button("RESET PASSWORD (Obbligatorio)"):
+                    conn = sqlite3.connect('centrale.db')
+                    conn.execute("UPDATE utenti SET cambio_obbligatorio=1 WHERE username=?", (u_sel,))
+                    conn.commit()
+                    conn.close()
+                    st.info(f"Resettata password per {u_sel}")
+
                 if st.button("ELIMINA DEFINITIVAMENTE", type="primary"):
-                    if u_del != "admin":
+                    if u_sel != "admin":
                         conn = sqlite3.connect('centrale.db')
-                        conn.execute("DELETE FROM utenti WHERE username=?", (u_del,))
+                        conn.execute("DELETE FROM utenti WHERE username=?", (u_sel,))
                         conn.commit()
                         conn.close()
                         st.rerun()
-                    else: st.warning("Impossibile eliminare l'Admin.")
+                    else:
+                        st.warning("L'account Admin principale non può essere eliminato!")
     else:
-        st.info("Accesso limitato alle risorse. Pannello Admin non disponibile.")
+        # Messaggio per gli Operatori
+        st.divider()
+        st.info("🔒 Pannello gestione account protetto. Contatta l'amministratore per modifiche ai permessi.")
                                 
 
 # =========================================================
