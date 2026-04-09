@@ -89,6 +89,52 @@ if st.session_state.utente_connesso is None:
                     st.rerun()
             else: st.error("ID o Password errati.")
     st.stop()
+    with tab_risorse:
+            st.header("🚑 Stato Risorse Territoriali")
+            
+            # 1. Elenco mezzi (Sempre visibile)
+            for m, d in st.session_state.database_mezzi.items():
+                st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
+
+            # 2. Gestione Account (VISIBILE SOLO AD ADMIN)
+            if st.session_state.ruolo == "Admin":
+                st.divider()
+                st.subheader("👥 Gestione Account Operatori")
+                
+                # Visualizza tabella utenti attuale
+                conn = sqlite3.connect('centrale.db')
+                df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
+                conn.close()
+                st.dataframe(df_u, use_container_width=True, hide_index=True)
+
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    with st.expander("➕ Crea Nuovo Utente"):
+                        new_u = st.text_input("User").lower().strip()
+                        new_p = st.text_input("PW Temp", type="password")
+                        new_r = st.selectbox("Ruolo", ["Operatore", "Admin"])
+                        if st.button("Crea"):
+                            conn = sqlite3.connect('centrale.db')
+                            try:
+                                conn.execute("INSERT INTO utenti VALUES (?,?,?,?)", (new_u, new_p, 1, new_r))
+                                conn.commit()
+                                st.success("Creato!")
+                                st.rerun()
+                            except: st.error("Username già presente")
+                            finally: conn.close()
+
+                with col2:
+                    with st.expander("❌ Elimina Utente"):
+                        del_u = st.selectbox("Seleziona da eliminare", df_u['username'].tolist())
+                        if st.button("Elimina Definitivamente", type="primary"):
+                            if del_u != "admin":
+                                conn = sqlite3.connect('centrale.db')
+                                conn.execute("DELETE FROM utenti WHERE username=?", (del_u,))
+                                conn.commit()
+                                conn.close()
+                                st.rerun()
+                            else: st.warning("Non puoi eliminare l'admin principale!")
 
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
