@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. GESTIONE DATABASE PERSISTENTE (SQLITE) - UNIFICATO
+# 1. DATABASE E INIZIALIZZAZIONE (UNIFICATO)
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
@@ -16,7 +16,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
     
-    # --- LOGICA VVF: Tabella creata all'avvio ---
+    # Tabella VVF (Il Ponte)
     c.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
     
@@ -49,19 +49,18 @@ def aggiorna_password_db(username, nuova_pw):
 init_db()
 
 # =========================================================
-# 2. SCHERMATA LOGIN CON SALVATAGGIO RUOLO
+# 2. LOGIN E GESTIONE SESSIONE
 # =========================================================
 st.set_page_config(page_title="SOREU Alpina - Simulatore 118", layout="wide")
 
-if 'utente_connesso' not in st.session_state:
-    st.session_state.utente_connesso = None
-if 'fase_cambio_pw' not in st.session_state:
-    st.session_state.fase_cambio_pw = False
-if 'ruolo' not in st.session_state:
-    st.session_state.ruolo = None
+# Inizializza variabili di stato se mancanti
+if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
+if 'ruolo' not in st.session_state: st.session_state.ruolo = None
+if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 
 if st.session_state.utente_connesso is None:
     st.title("🔐 SOREU Alpina - Login")
+    
     if st.session_state.fase_cambio_pw:
         st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
         n_p = st.text_input("Nuova Password", type="password")
@@ -69,12 +68,11 @@ if st.session_state.utente_connesso is None:
         if st.button("SALVA E ACCEDI"):
             if n_p == c_p and len(n_p) >= 4:
                 aggiorna_password_db(st.session_state.temp_user, n_p)
-                # Recuperiamo i dati per impostare il ruolo dopo il cambio PW
                 u_data = get_utente_db(st.session_state.temp_user)
                 st.session_state.utente_connesso = st.session_state.temp_user
                 st.session_state.ruolo = u_data[3]
                 st.rerun()
-            else: st.error("Errore nelle password (minimo 4 caratteri).")
+            else: st.error("Errore password (minimo 4 caratteri).")
     else:
         u_in = st.text_input("Username").lower().strip()
         p_in = st.text_input("Password", type="password")
@@ -86,9 +84,8 @@ if st.session_state.utente_connesso is None:
                     st.session_state.temp_user = u_in
                     st.rerun()
                 else:
-                    # --- SALVATAGGIO SESSIONE COMPLETO ---
                     st.session_state.utente_connesso = u_in
-                    st.session_state.ruolo = user_data[3] # Qui carichiamo 'Admin' o 'Operatore'
+                    st.session_state.ruolo = user_data[3]
                     st.rerun()
             else: st.error("ID o Password errati.")
     st.stop()
