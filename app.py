@@ -567,30 +567,35 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                    if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                   if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                                # 1. Controllo Triage
                                 if codice_scelto != ev['codice_reale']:
                                     st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
                                 else:
                                     st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
-                                    
-                                # Notifica Interforze ai VVF
-                                parole_chiave_vvf = ["Incidente", "Incendio", "Schiacciamento", "Annegamento", "Incastrato"]
-                                if any(parola in ev['sintomi'] for parola in parole_chiave_vvf):
+                                
+                                # 2. Invio ai VVF (Interforze)
+                                keywords_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato", "Annegamento"]
+                                if any(p in ev['sintomi'] for p in keywords_vvf):
                                     try:
-                                        conn = sqlite3.connect('centrale.db')
-                                        c = conn.cursor()
-                                        c.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
-                                                 (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico."))
-                                        conn.commit()
-                                        conn.close()
+                                        conn_vvf = sqlite3.connect('centrale.db')
+                                        c_vvf = conn_vvf.cursor()
+                                        c_vvf.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
+                                                     (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico."))
+                                        conn_vvf.commit()
+                                        conn_vvf.close()
                                     except:
                                         pass
 
+                                # 3. Assegnazione Mezzi (ALLINEATO A SINISTRA SOTTO IL TRIAGE)
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
                                         st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
-                                        aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
+                                        try:
+                                            aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
+                                        except:
+                                            pass
                                     
                                     st.session_state.missioni[m_scelto] = {
                                         "target": f"{ev['via']}, {ev['comune']}", 
@@ -601,8 +606,11 @@ else:
                                         "richiesto_ospedale": False,
                                         "patologia": ev.get("sintomi", "Generica")
                                     }
+                                
+                                # 4. Reset Evento
                                 st.session_state.evento_corrente = None
                                 st.rerun()
+                       
                                 
                             for m_scelto in mezzi_scelti:
                                 if not st.session_state.auto_mode:
