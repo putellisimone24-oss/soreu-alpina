@@ -20,8 +20,8 @@ def init_db():
         utenti_iniziali = [
             ('admin', 'admin', 0, 'Admin'),
             ('simone.putelli', 'simone', 1, 'Operatore'),
-            ('simone.marinoni', 'simone', 1, 'Operatore')
-             ('andrea.giuliano', 'andrea', 1, 'Operatore')
+            ('andrea.giuliano', 'andrea', 1, 'Operatore')
+            ('', '', 1, 'Operatore')
         ]
         c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
     conn.commit()
