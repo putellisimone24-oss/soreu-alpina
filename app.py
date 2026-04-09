@@ -588,9 +588,10 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                     except:
                                         pass
 
-                                # 3. Assegnazione Mezzi (ALLINEATO A SINISTRA SOTTO IL TRIAGE)
+                               # 3. Ciclo Assegnazione Mezzi
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
+                                        # <--- QUESTE RIGHE DEVONO ESSERE PIÙ A DESTRA DELL'IF
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
                                         st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                         try:
@@ -598,9 +599,11 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                         except:
                                             pass
                                     
+                                    # Questa riga invece deve tornare sotto l'IF (stessa colonna dell'IF)
                                     st.session_state.missioni[m_scelto] = {
                                         "target": f"{ev['via']}, {ev['comune']}", 
-                                        "lat": ev['lat'], "lon": ev['lon'],
+                                        "lat": ev['lat'], 
+                                        "lon": ev['lon'],
                                         "codice": codice_scelto, 
                                         "ospedale_assegnato": osp_selezionato,
                                         "timestamp_creazione": time.time(), 
