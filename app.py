@@ -342,13 +342,6 @@ scenari_clinici = [
     {"sintomi": "Lieve trauma distorsivo caviglia", "codice_reale": "VERDE", "tipo": "Trauma", "necessita_msa": False}
 ]
 
-nuovi_scenari_tecnici = [
-    {"sintomi": "Incidente Stradale", "criticita": "ROSSO", "note": "Scontro frontale, possibile incastrato"},
-    {"sintomi": "Incendio Abitazione", "criticita": "ROSSO", "note": "Fumo dal secondo piano, persone all'interno"},
-    {"sintomi": "Schiacciamento", "criticita": "ROSSO", "note": "Infortunio agricolo/industriale"},
-    {"sintomi": "Incastrato in Macchinario", "criticita": "ROSSO", "note": "Arto superiore intrappolato"}
-]
-
 # =========================================================
 # 2. LOGICA DI SISTEMA
 # =========================================================
@@ -539,7 +532,7 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                       if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                        if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
                             if codice_scelto != ev['codice_reale']:
                                 st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
                             else:
@@ -547,75 +540,13 @@ else:
                                 
                             for m_scelto in mezzi_scelti:
                                 if not st.session_state.auto_mode:
-                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
-                                    st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
+                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                     aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
-                                
-                                # --- INIZIO BLOCCO MISSIONE (ALLINEATO) ---
                                 st.session_state.missioni[m_scelto] = {
-                                    "target": f"{ev['via']}, {ev['comune']}", 
-                                    "lat": ev['lat'], 
-                                    "lon": ev['lon'],
-                                    "codice": codice_scelto, 
-                                    "ospedale_assegnato": osp_selezionato,
-                                    "timestamp_creazione": time.time(), 
-                                    "richiesto_ospedale": False,
+                                    "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
+                                    "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
+                                    "timestamp_creazione": time.time(), "richiesto_ospedale": False,
                                     "patologia": ev.get("sintomi", "Generica")
-                                }
-                                # --- FINE BLOCCO MISSIONE ---
-
-                            # --- LOGICA VVF (Sotto il ciclo for, stesso allineamento del for) ---
-                            keys_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
-                            if any(k.lower() in ev.get('sintomi', '').lower() for k in keys_vvf):
-                                try:
-                                    conn_vvf = sqlite3.connect('centrale.db')
-                                    c_vvf = conn_vvf.cursor()
-                                    c_vvf.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
-                                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
-                                    c_vvf.execute('''INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) 
-                                                 VALUES (?, ?, ?, ?, ?, ?)''', 
-                                                 (ev['sintomi'], ev['comune'], ev['via'], "ALLERTATI", datetime.now().strftime("%H:%M"), "Richiesto supporto da SOREU"))
-                                    conn_vvf.commit()
-                                    conn_vvf.close()
-                                    st.toast("🚒 Missione trasmessa ai VVF!", icon="🔥")
-                                except:
-                                    pass
-
-                            st.session_state.evento_corrente = None
-                            st.rerun()
-                           
-                            # =========================================================
-                            # 🚒 LOGICA INTEGRATA SOREU - VVF (AGGIUNTA QUI)
-                            # =========================================================
-                            keys_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
-                            
-                            # Se i sintomi contengono una delle parole chiave, invia ai VVF
-                            if any(k.lower() in ev.get('sintomi', '').lower() for k in keys_vvf):
-                                try:
-                                    conn_vvf = sqlite3.connect('centrale.db')
-                                    c_vvf = conn_vvf.cursor()
-                                    
-                                    # Assicurati che la tabella esista nel DB comune
-                                    c_vvf.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
-                                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                                  scenario TEXT, comune TEXT, indirizzo TEXT, 
-                                                  stato_vvf TEXT, ora TEXT, note TEXT)''')
-                                    
-                                    # Inserimento missione per il monitor VVF
-                                    c_vvf.execute('''INSERT INTO missioni_vvf 
-                                                 (scenario, comune, indirizzo, stato_vvf, ora, note) 
-                                                 VALUES (?, ?, ?, ?, ?, ?)''', 
-                                                 (ev['sintomi'], ev['comune'], ev['via'], "ALLERTATI", datetime.now().strftime("%H:%M"), "Richiesto supporto da SOREU Alpina"))
-                                    
-                                    conn_vvf.commit()
-                                    conn_vvf.close()
-                                    st.toast("🚒 Missione trasmessa ai Vigili del Fuoco!", icon="🔥")
-                                except Exception as e:
-                                    st.error(f"Errore ponte VVF: {e}")
-                            # =========================================================
-
-                            st.session_state.evento_corrente = None
-                            st.rerun()
                                 }
                             st.session_state.evento_corrente = None; st.rerun()
                     else: st.error("Nessun mezzo disponibile!")
@@ -738,21 +669,3 @@ else:
                     st.info(f"🚩 **Direzione:** {miss['target']}")
                 else:
                     st.success("Nessun paziente a bordo. In attesa di missione.")
-                    
-                    # COPIA E INCOLLA QUESTO ALLA FINE DEL FILE (CONTRO LA PARETE SINISTRA)
-conn_ponte = sqlite3.connect('centrale.db')
-c_ponte = conn_ponte.cursor()
-c_ponte.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
-             (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
-
-if st.session_state.evento_corrente:
-    ev = st.session_state.evento_corrente
-    keywords = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
-    if any(p in ev['sintomi'] for p in keywords):
-        # Controlla se l'abbiamo già inviata per non duplicarla
-        c_ponte.execute("SELECT * FROM missioni_vvf WHERE scenario=? AND ora=?", (ev['sintomi'], datetime.now().strftime("%H:%M")))
-        if not c_ponte.fetchone():
-            c_ponte.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
-                         (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto."))
-            conn_ponte.commit()
-conn_ponte.close()
