@@ -93,7 +93,7 @@ if st.session_state.utente_connesso is None:
     "👥 Risorse e Account"
 ])
     with tab_centrale:
-    st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
+     st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
     # Inserisci qui il tuo codice originale per la gestione eventi
 
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
