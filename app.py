@@ -97,9 +97,9 @@ tab_centrale, tab_mezzi, tab_risorse = st.tabs([
 with tab_centrale:
     st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
     # Inserisci qui il tuo codice originale per la gestione eventi
-    
-    with tab_risorse:
-st.header("🚑 Stato Risorse Territoriali")
+
+with tab_risorse:
+ st.header("🚑 Stato Risorse Territoriali")
     
      # Elenco mezzi semplice (Per tutti)
     if 'database_mezzi' in st.session_state:
