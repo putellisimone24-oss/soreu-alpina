@@ -567,7 +567,8 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                   if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                
+if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
                                 # 1. Controllo Triage
                                 if codice_scelto != ev['codice_reale']:
                                     st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
