@@ -85,27 +85,48 @@ if st.session_state.utente_connesso is None:
             else: st.error("ID o Password errati.")
     st.stop()
     
+# ... (tutta la parte iniziale di login e db che hai già va bene) ...
+
 # =========================================================
-# 3. INTERFACCIA A TAB (COMUNICAZIONI RIMOSSA)
+# 3. INTERFACCIA A TAB (PULITA E CORRETTA)
 # =========================================================
-    tab_centrale,tab_risorse = st.tabs([
+tab_centrale, tab_mezzi, tab_risorse = st.tabs([
     "🖥️ Centrale Operativa", 
+    "🚑 Gestione Mezzi", 
     "👥 Risorse e Account"
 ])
-    with tab_centrale:
-     st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
-    # Inserisci qui il tuo codice originale per la gestione eventi
-    with tab_risorse:
 
-        
+with tab_centrale:
+    st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
+    # Metti qui il tuo codice per generare chiamate e inviare mezzi
+    # ESEMPIO:
+    # if st.button("Genera Chiamata"):
+    #     st.write("Nuova chiamata in arrivo...")
+
+with tab_mezzi:
+    st.header("🚑 Monitoraggio Mezzi")
+    # Metti qui il tuo codice per vedere dove sono le ambulanze
+    st.info("Visualizzazione dello stato dei mezzi in tempo reale.")
+
+with tab_risorse:
+    st.header("🚑 Stato Risorse Territoriali")
+    
+    # Visualizzazione mezzi semplice per tutti
+    if 'database_mezzi' in st.session_state:
+        for m, d in st.session_state.database_mezzi.items():
+            st.write(f"**{m}**: {d['stato']}")
+    
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
-if st.session_state.ruolo == "Admin":
+    # Nota come tutto qui sotto sia spostato a destra (indentato)
+    if st.session_state.ruolo == "Admin":
         st.divider()
         st.subheader("👥 Gestione Account Operatori")
         
         conn = sqlite3.connect('centrale.db')
         df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
         conn.close()
+        
+        st.write("Database Utenti:")
         st.dataframe(df_u, use_container_width=True, hide_index=True)
 
         col1, col2 = st.columns(2)
@@ -122,11 +143,12 @@ if st.session_state.ruolo == "Admin":
                             conn.commit()
                             st.success(f"Creato {nu}!")
                             st.rerun()
-                        except: st.error("Esiste già.")
+                        except: st.error("Errore: esiste già.")
                         finally: conn.close()
+        
         with col2:
             with st.expander("❌ Elimina Utente"):
-                u_del = st.selectbox("Seleziona", df_u['username'].tolist(), key="u_del")
+                u_del = st.selectbox("Seleziona utente", df_u['username'].tolist(), key="u_del")
                 if st.button("ELIMINA", type="primary"):
                     if u_del != "admin":
                         conn = sqlite3.connect('centrale.db')
@@ -134,8 +156,10 @@ if st.session_state.ruolo == "Admin":
                         conn.commit()
                         conn.close()
                         st.rerun()
-                    else: st.warning("Non puoi eliminare l'Admin principale.")
+                    else:
+                        st.warning("Impossibile eliminare l'Admin principale.")
     else:
+        st.divider()
         st.info("🔒 Pannello gestione account riservato agli Amministratori.")
                                 
 
