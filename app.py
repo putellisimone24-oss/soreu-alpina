@@ -95,7 +95,9 @@ if st.session_state.utente_connesso is None:
     with tab_centrale:
      st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
     # Inserisci qui il tuo codice originale per la gestione eventi
+    with tab_risorse:
 
+        
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
     if st.session_state.ruolo == "Admin":
         st.divider()
