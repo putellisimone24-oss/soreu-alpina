@@ -7,17 +7,13 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. GESTIONE DATABASE PERSISTENTE (SQLITE)
+# 1. GESTIONE DATABASE PERSISTENTE (SQLITE) - AGGIUNTO
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
-    
-    # --- AGGIUNTO PER INTERFORZE: Tabella per i Vigili del Fuoco ---
-    c.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
     
     c.execute("SELECT COUNT(*) FROM utenti")
     if c.fetchone()[0] == 0:
@@ -310,71 +306,40 @@ if st.session_state.auto_mode and st.session_state.missioni and st.session_state
 # Definiti fuori dalle funzioni per essere leggibili ovunque (Fix NameError)
 
 database_indirizzi = [
-    # --- BERGAMO CITTÀ E HINTERLAND ---
-    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS - Piazzale Arrivi", "lat": 45.691, "lon": 9.675},
-    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss - Ingresso Tribuna", "lat": 45.709, "lon": 9.681},
-    {"comune": "Bergamo", "via": "Via Gombito", "target": "Città Alta - Torre del Gombito", "lat": 45.704, "lon": 9.663},
-    {"comune": "Bergamo", "via": "Via Tiraboschi", "target": "Zona Centro / Coin", "lat": 45.694, "lon": 9.670},
-    {"comune": "Bergamo", "via": "Largo Barozzi", "target": "Ex Ospedali Riuniti", "lat": 45.698, "lon": 9.658},
-    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto - Terminal Arrivi", "lat": 45.666, "lon": 9.700},
-    {"comune": "Orio al Serio", "via": "Via Portico", "target": "Orio Center - Zona Food Court", "lat": 45.663, "lon": 9.693},
-    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine - Ingresso Merci", "lat": 45.648, "lon": 9.602},
-    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Parco Scientifico Kilometro Rosso", "lat": 45.641, "lon": 9.635},
-    {"comune": "Seriate", "via": "Via Paderno", "target": "Ospedale Bolognini - PS", "lat": 45.684, "lon": 9.721},
-    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio-Caravaggio", "lat": 45.525, "lon": 9.585},
-    {"comune": "Treviglio", "via": "Via Verga", "target": "PalaFacchetti - Palazzetto Sport", "lat": 45.515, "lon": 9.595},
-
-    # --- BERGAMO PROVINCIA / VALLI ---
-    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Istituto Superiore Turoldo", "lat": 45.795, "lon": 9.664},
-    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Casinò", "lat": 45.835, "lon": 9.665},
+    # --- AREA BERGAMO ---
+    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
+    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
+    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
+    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine", "lat": 45.648, "lon": 9.602},
+    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
+    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero Alpino", "lat": 45.912, "lon": 10.081},
+    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
+    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
     {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071},
-    {"comune": "Sarnico", "via": "Via Roma", "target": "Lido Nettuno", "lat": 45.666, "lon": 9.912},
-    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio Passo Presolana", "lat": 45.912, "lon": 10.081},
-    {"comune": "Clusone", "via": "Via Dante", "target": "Piazza dell'Orologio", "lat": 45.883, "lon": 9.950},
-
-    # --- BRESCIA CITTÀ E HINTERLAND ---
-    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Palazzo Loggia - Centro", "lat": 45.539, "lon": 10.220},
-    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Spedali Civili - DEA I livello", "lat": 45.551, "lon": 10.228},
-    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti - Settore Ospiti", "lat": 45.568, "lon": 10.235},
-    {"comune": "Brescia", "via": "Via Einaudi", "target": "C.C. Elnòs Shopping", "lat": 45.518, "lon": 10.165},
-    {"comune": "Brescia", "via": "Corso Magenta", "target": "Conservatorio Luca Marenzio", "lat": 45.535, "lon": 10.225},
-    {"comune": "Brescia", "via": "Via San Faustino", "target": "Zona Universitaria", "lat": 45.543, "lon": 10.221},
-    {"comune": "Roncadelle", "via": "Via Valle Camonica", "target": "Zona Commerciale Ikea", "lat": 45.525, "lon": 10.155},
-
-    # --- BRESCIA LAGHI E VALLI ---
-    {"comune": "Desenzano del Garda", "via": "Lungolago Battisti", "target": "Porto e Imbarcadero", "lat": 45.470, "lon": 10.539},
-    {"comune": "Desenzano del Garda", "via": "Via Andreis", "target": "Pronto Soccorso Desenzano", "lat": 45.474, "lon": 10.512},
-    {"comune": "Sirmione", "via": "Piazza Castello", "target": "Ingresso Castello Scaligero", "lat": 45.492, "lon": 10.608},
-    {"comune": "Sirmione", "via": "Via Colombare", "target": "Terme di Sirmione", "lat": 45.485, "lon": 10.600},
-    {"comune": "Salò", "via": "Piazza Vittorio Emanuele", "target": "Lungolago Zanardelli", "lat": 45.607, "lon": 10.525},
-    {"comune": "Gavardo", "via": "Via Gosa", "target": "Ospedale di Gavardo", "lat": 45.588, "lon": 10.438},
-    {"comune": "Gardone Riviera", "via": "Via Vittoriale", "target": "Vittoriale degli Italiani", "lat": 45.624, "lon": 10.565},
-    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Terme di Boario", "lat": 45.888, "lon": 10.188},
-    {"comune": "Darfo Boario Terme", "via": "Via Valeriana", "target": "Stazione FS Boario", "lat": 45.890, "lon": 10.185},
-    {"comune": "Esine", "via": "Via Manzoni", "target": "Ospedale di Esine", "lat": 45.824, "lon": 10.215},
-    {"comune": "Edolo", "via": "Via Marconi", "target": "Bivio per Tonale/Aprica", "lat": 46.172, "lon": 10.330},
-    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lido di Iseo", "lat": 45.659, "lon": 10.051},
-    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto di Montichiari", "lat": 45.428, "lon": 10.330},
-    {"comune": "Chiari", "via": "Piazza Martiri", "target": "Duomo di Chiari", "lat": 45.538, "lon": 9.924},
-    {"comune": "Manerbio", "via": "Via S. Martino del Carso", "target": "Ospedale di Manerbio", "lat": 45.352, "lon": 10.138}
+    # --- AREA BRESCIA ---
+    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
+    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
+    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
+    {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
+    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto G. D'Annunzio", "lat": 45.428, "lon": 10.330},
+    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
+    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
+    {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
 ]
 
 scenari_clinici = [
+    {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico", "codice_reale": "ROSSO", "tipo": "Cardio", "necessita_msa": True},
     {"sintomi": "Arresto Cardio-Respiratorio - Manovre in corso", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
-    {"sintomi": "Sospetto IMA (Infarto) - Forte dolore precordiale", "codice_reale": "ROSSO", "tipo": "Cardiologico", "necessita_msa": True},
-    {"sintomi": "Sospetto ICTUS (Stroke) - Emiparesi e afasia", "codice_reale": "ROSSO", "tipo": "Neurologico", "necessita_msa": True},
-    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore - Politrauma", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
-    {"sintomi": "Infortunio sul Lavoro - Schiacciamento toracico", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
-    {"sintomi": "Caduta da grande altezza - Incosciente", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
-    {"sintomi": "Annegamento / Grave malore in acqua", "codice_reale": "ROSSO", "tipo": "Ambientale", "necessita_msa": True},
-    {"sintomi": "Crisi Epilettica in atto - Convulsioni toniche", "codice_reale": "GIALLO", "tipo": "Neurologico", "necessita_msa": False},
-    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Traumatologico", "necessita_msa": False},
-    {"sintomi": "Dolore addominale acuto - Segni di peritonismo", "codice_reale": "GIALLO", "tipo": "Medico", "necessita_msa": False},
-    {"sintomi": "Dispnea in paziente asmatico - Non risponde a farmaci", "codice_reale": "GIALLO", "tipo": "Respiratorio", "necessita_msa": False},
-    {"sintomi": "Paziente anziano con febbre alta e disorientamento", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
-    {"sintomi": "Lieve trauma distorsivo durante attività sportiva", "codice_reale": "VERDE", "tipo": "Traumatologico", "necessita_msa": False},
-    {"sintomi": "Epistassi massiva che non si arresta", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
-    {"sintomi": "Piccola ustione domestica a braccio", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False}
+    {"sintomi": "Sospetto ICTUS (Stroke) - Afasia", "codice_reale": "ROSSO", "tipo": "Neuro", "necessita_msa": True},
+    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Infortunio sul Lavoro - Schiacciamento", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Annegamento / Malore in acqua", "codice_reale": "ROSSO", "tipo": "Ambiente", "necessita_msa": True},
+    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "necessita_msa": False},
+    {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "necessita_msa": False},
+    {"sintomi": "Dolore addominale acuto", "codice_reale": "GIALLO", "tipo": "Addominale", "necessita_msa": False},
+    {"sintomi": "Paziente anziano con febbre alta", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Lieve trauma distorsivo caviglia", "codice_reale": "VERDE", "tipo": "Trauma", "necessita_msa": False}
 ]
 
 # =========================================================
@@ -567,106 +532,66 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                
-if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
-                                # 1. Controllo Triage
-                                if codice_scelto != ev['codice_reale']:
-                                    st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
-                                else:
-                                    st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
+                        if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                            if codice_scelto != ev['codice_reale']:
+                                st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
+                            else:
+                                st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
                                 
-                           # 2. Invio ai VVF (Interforze)
-                                keywords_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato", "Annegamento"]
-                                if any(p in ev['sintomi'] for p in keywords_vvf):
-                                    try:
-                                        conn_vvf = sqlite3.connect('centrale.db')
-                                        c_vvf = conn_vvf.cursor()
-                                        c_vvf.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
-                                                     (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico."))
-                                        conn_vvf.commit()
-                                        conn_vvf.close()
-                                    except:
-                                        pass
-
-                            # 3. Ciclo Assegnazione Mezzi
-                                for m_scelto in mezzi_scelti:
-                                    if not st.session_state.auto_mode:
-                                        st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
-                                        st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
-                                        try:
-                                            aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
-                                        except:
-                                            pass
-                                    
-                                    st.session_state.missioni[m_scelto] = {
-                                        "target": f"{ev['via']}, {ev['comune']}", 
-                                        "lat": ev['lat'], 
-                                        "lon": ev['lon'],
-                                        "codice": codice_scelto, 
-                                        "ospedale_assegnato": osp_selezionato,
-                                        "timestamp_creazione": time.time(), 
-                                        "richiesto_ospedale": False,
-                                        "patologia": ev.get("sintomi", "Generica")
-                                    }
-                                
-                                # 4. Reset Evento e Chiusura Scheda
-                                st.session_state.evento_corrente = None
-                                st.rerun()
-
-            # --- CORREZIONE INDENTAZIONE ---
-            # Questo blocco deve essere allineato con il "with col_info:" (o colonna precedente)
- with col_mappa:
+                            for m_scelto in mezzi_scelti:
+                                if not st.session_state.auto_mode:
+                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
+                                    aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
+                                st.session_state.missioni[m_scelto] = {
+                                    "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
+                                    "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
+                                    "timestamp_creazione": time.time(), "richiesto_ospedale": False,
+                                    "patologia": ev.get("sintomi", "Generica")
+                                }
+                            st.session_state.evento_corrente = None; st.rerun()
+                    else: st.error("Nessun mezzo disponibile!")
+                else: st.info("In attesa di chiamata da NUE 112...")
+                    
+            with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
-                
                 if st.session_state.evento_corrente:
-                    ev_map = st.session_state.evento_corrente
+                    ev = st.session_state.evento_corrente
                     for i in range(0, 360, 45):
-                        punti_mappa.append({
-                            "lat": ev_map["lat"] + 0.005 * math.cos(math.radians(i)), 
-                            "lon": ev_map["lon"] + 0.005 * math.sin(math.radians(i))
-                        })
+                        punti_mappa.append({"lat": ev["lat"] + 0.005 * math.cos(math.radians(i)), "lon": ev["lon"] + 0.005 * math.sin(math.radians(i))})
                         
-                if punti_mappa: 
-                    st.map(pd.DataFrame(punti_mappa), zoom=9)
+                if punti_mappa: st.map(pd.DataFrame(punti_mappa), zoom=9)
                 
                 st.subheader("📻 Registro Radio SOREU")
                 if st.session_state.registro_radio:
                     box_testo = "\n".join(st.session_state.registro_radio[:15])
-                    st.text_area(label="Comunicazioni Voce", value=box_testo, height=150, disabled=True)           
+                    st.text_area(label="Comunicazioni Voce", value=box_testo, height=150, disabled=True)
                 
                 st.subheader("📋 Missioni in Corso")
                 if st.session_state.missioni:
                     for m, dati in st.session_state.missioni.items():
                         c_m, c_o = st.columns([2, 1])
-                        with c_m: 
-                            st.write(f"🚑 **{m}** -> {dati['target']} ({st.session_state.database_mezzi[m]['stato']})")
+                        with c_m: st.write(f"🚑 **{m}** -> {dati['target']} ({st.session_state.database_mezzi[m]['stato']})")
                         with c_o:
                             nuovo_osp = st.selectbox(f"Osp. per {m}", list(st.session_state.database_ospedali.keys()), key=f"sel_osp_{m}")
                             if nuovo_osp != dati.get("ospedale_confermato", dati["ospedale_assegnato"]):
-                                st.session_state.missioni[m]["ospedale_confermato"] = nuovo_osp
-                                st.toast(f"Ospedale aggiornato per {m} -> {nuovo_osp}")
-                else: 
-                    st.caption("Nessuna missione in corso.")
-
-        # Allineamento schede (Tabs)
+                                st.session_state.missioni[m]["ospedale_confermato"] = nuovo_osp; st.toast(f"Ospedale aggiornato per {m} -> {nuovo_osp}")
+                else: st.caption("Nessuna missione in corso.")
+        
         with tab_risorse:
             st.header("🚑 Stato Risorse Territoriali")
-            for m, d in st.session_state.database_mezzi.items(): 
-                st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
+            for m, d in st.session_state.database_mezzi.items(): st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
                 
         with tab_ps:
             st.header("🏥 Saturazione Pronto Soccorso")
             for osp, dati in st.session_state.database_ospedali.items():
-                col_i, col_a = st.columns([3, 1])
-                with col_i:
+                col_info, col_azione = st.columns([3, 1])
+                with col_info:
                     st.write(f"**{osp}** ({dati['pazienti']} / {dati['max']})")
                     st.progress((dati["pazienti"] / dati["max"]))
-                with col_a:
+                with col_azione:
                     if st.button(f"Libera Posto", key=f"dim_{osp}"):
-                        if dati["pazienti"] > 0: 
-                            st.session_state.database_ospedali[osp]["pazienti"] -= 1
-                            st.rerun()
+                        if dati["pazienti"] > 0: st.session_state.database_ospedali[osp]["pazienti"] -= 1; st.rerun()
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
