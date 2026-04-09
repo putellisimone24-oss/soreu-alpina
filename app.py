@@ -277,17 +277,14 @@ database_indirizzi = [
 ]
 
 scenari_clinici = [
-    {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "tipo": "Cardio", "msa": True},
-    {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "tipo": "Rianimatorio", "msa": True},
-    {"sintomi": "Sospetto ICTUS (Stroke) - Emisindrome e afasia", "codice": "ROSSO", "tipo": "Neuro", "msa": True},
-    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "tipo": "Trauma", "msa": True},
-    {"sintomi": "Infortunio sul Lavoro - Schiacciamento / Amputazione", "codice": "ROSSO", "tipo": "Trauma", "msa": True},
-    {"sintomi": "Ostruzione vie aeree da corpo estraneo (PEDIATRICO)", "codice": "ROSSO", "tipo": "Pediatrico", "msa": True},
-    {"sintomi": "Crisi Epilettica in atto - Inconsciente", "codice": "GIALLO", "tipo": "Neuro", "msa": False},
-    {"sintomi": "Dolore addominale acuto - Sospetta appendicite", "codice": "GIALLO", "tipo": "Addominale", "msa": False},
-    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "tipo": "Trauma", "msa": False},
-    {"sintomi": "Paziente anziano con febbre alta e astenia", "codice": "VERDE", "tipo": "Medico", "msa": False},
-    {"sintomi": "Lieve trauma distorsivo caviglia", "codice": "VERDE", "tipo": "Trauma", "msa": False}
+    {"sintomi": "Sospetto IMA (Infarto)", "codice_reale": "ROSSO", "tipo": "Cardio", "msa": True},
+    {"sintomi": "Arresto Cardio-Respiratorio", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "msa": True},
+    {"sintomi": "Sospetto ICTUS (Stroke)", "codice_reale": "ROSSO", "tipo": "Neuro", "msa": True},
+    {"sintomi": "Incidente Auto-Moto", "codice_reale": "ROSSO", "tipo": "Trauma", "msa": True},
+    {"sintomi": "Infortunio sul Lavoro", "codice_reale": "ROSSO", "tipo": "Trauma", "msa": True},
+    {"sintomi": "Caduta - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "msa": False},
+    {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "msa": False},
+    {"sintomi": "Paziente anziano con febbre", "codice_reale": "VERDE", "tipo": "Medico", "msa": False}
 ]
 
 tempo_base = 120
