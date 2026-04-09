@@ -301,46 +301,91 @@ if st.session_state.auto_mode and st.session_state.missioni and st.session_state
     aggiorna_stati_automatici()
     
 # =========================================================
-# 1. DATABASE GLOBALI (BG + BS) - VISIBILI DA TUTTO IL CODICE
+# 1. DATABASE GLOBALI (BG + BS) - INTEGRALI E COMPLETI
 # =========================================================
-DATABASE_INDIRIZZI = [
+# Definiti fuori dalle funzioni per essere leggibili ovunque (Fix NameError)
+
+database_indirizzi = [
+    # --- AREA BERGAMO ---
     {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
     {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
     {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
     {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine", "lat": 45.648, "lon": 9.602},
-    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
+    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero Alpino", "lat": 45.912, "lon": 10.081},
+    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
+    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
     {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071},
+    # --- AREA BRESCIA ---
     {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
     {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
+    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
     {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
-    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051}
+    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto G. D'Annunzio", "lat": 45.428, "lon": 10.330},
+    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
+    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
+    {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
 ]
 
-SCENARI_CLINICI = [
+scenari_clinici = [
     {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico", "codice_reale": "ROSSO", "tipo": "Cardio", "necessita_msa": True},
     {"sintomi": "Arresto Cardio-Respiratorio - Manovre in corso", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
     {"sintomi": "Sospetto ICTUS (Stroke) - Afasia", "codice_reale": "ROSSO", "tipo": "Neuro", "necessita_msa": True},
     {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Infortunio sul Lavoro - Schiacciamento", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
+    {"sintomi": "Annegamento / Malore in acqua", "codice_reale": "ROSSO", "tipo": "Ambiente", "necessita_msa": True},
     {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "necessita_msa": False},
     {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "necessita_msa": False},
-    {"sintomi": "Paziente anziano con febbre alta e astenia", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False}
+    {"sintomi": "Dolore addominale acuto", "codice_reale": "GIALLO", "tipo": "Addominale", "necessita_msa": False},
+    {"sintomi": "Paziente anziano con febbre alta", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Lieve trauma distorsivo caviglia", "codice_reale": "VERDE", "tipo": "Trauma", "necessita_msa": False}
 ]
 
-tempo_base = 120
-tempo_necessario = tempo_base / st.session_state.time_mult
-if st.session_state.turno_iniziato and (time.time() - st.session_state.last_mission_time > tempo_necessario):
-    if not st.session_state.evento_corrente:
-        scelta_indirizzo = random.choice(database_indirizzi)
-        scelta_clinica = random.choice(scenari_clinici)
-        st.session_state.evento_corrente = {
-            "comune": scelta_indirizzo["comune"], "via": scelta_indirizzo["via"],
-            "lat": scelta_indirizzo["lat"], "lon": scelta_indirizzo["lon"],
-            "sintomi": scelta_clinica["sintomi"], "codice_reale": scelta_clinica["codice_reale"],
-            "necessita_msa": scelta_clinica["necessita_msa"]
-        }
-        st.session_state.last_mission_time = time.time()
-        st.session_state.log_chiamate.append(f"{scelta_indirizzo['via']} ({scelta_indirizzo['comune']})")
-        st.session_state.suono_riprodotto = False
+# =========================================================
+# 2. LOGICA DI SISTEMA
+# =========================================================
+
+def init_db():
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS utenti 
+                 (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
+    c.execute("SELECT COUNT(*) FROM utenti")
+    if c.fetchone()[0] == 0:
+        utenti_iniziali = [
+            ('admin', 'admin', 0, 'Admin'),
+            ('simone.putelli', 'simone', 1, 'Operatore'),
+            ('simone.marinoni', 'simone', 1, 'Operatore')
+        ]
+        c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
+    conn.commit()
+    conn.close()
+
+def genera_missione_casuale():
+    # Usa le liste globali definite sopra
+    indirizzo = random.choice(database_indirizzi)
+    clinica = random.choice(scenari_clinici)
+    
+    st.session_state.evento_corrente = {
+        "comune": indirizzo["comune"],
+        "via": f"{indirizzo['via']}, {random.randint(1, 100)}",
+        "target": indirizzo["target"],
+        "lat": indirizzo["lat"], 
+        "lon": indirizzo["lon"],
+        "sintomi": clinica["sintomi"],
+        "codice_reale": clinica["codice_reale"],
+        "necessita_msa": clinica["necessita_msa"],
+        "ora_chiamata": datetime.now().strftime("%H:%M:%S")
+    }
+    st.session_state.last_mission_time = time.time()
+
+def calcola_distanza_e_tempo(lat1, lon1, lat2, lon2, is_eli=False):
+    # Formula Haversine semplificata
+    dist = math.sqrt((lat2 - lat1)**2 + (lon2 - lon1)**2) * 111.32
+    velocita = 210.0 if is_eli else 48.0
+    tempo = round((dist / velocita) * 60) + (2 if is_eli else 0)
+    return round(dist, 1), max(1, tempo)
 
 # INTESTAZIONE
 col_titolo, col_orologio = st.columns([3, 1])
