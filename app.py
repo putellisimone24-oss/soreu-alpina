@@ -7,14 +7,11 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. CONFIGURAZIONE PAGINA
+# 1. CONFIGURAZIONE E INIZIALIZZAZIONE STATO
 # =========================================================
 st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
 
-# =========================================================
-# 2. INIZIALIZZAZIONE STATO (MANUALE E IMMEDIATA)
-# =========================================================
-# Inizializziamo subito per evitare AttributeError
+# Inizializzazione variabili per evitare AttributeError e KeyError
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
 if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
 if 'ruolo' not in st.session_state: st.session_state.ruolo = None
@@ -27,30 +24,8 @@ if 'registro_radio' not in st.session_state: st.session_state.registro_radio = [
 if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 
 # =========================================================
-# 3. FUNZIONI GLOBALI (DEFINITE PRIMA DELL'USO)
+# 2. FUNZIONI CORE (DEFINITE PRIMA DELL'USO)
 # =========================================================
-
-def genera_missione_casuale():
-    """Genera una missione casuale e la salva nello stato"""
-    comuni = ["Bergamo", "Seriate", "Dalmine", "Stezzano", "Osio Sotto", "Treviolo"]
-    vie = ["Via Roma", "Viale Papa Giovanni XXIII", "Via Baioni", "Piazza Vecchia"]
-    scenari = [
-        {"sintomi": "Arresto Cardiaco", "codice": "ROSSO"},
-        {"sintomi": "Trauma Stradale", "codice": "ROSSO"},
-        {"sintomi": "Perdita di coscienza", "codice": "GIALLO"},
-        {"sintomi": "Malore generico", "codice": "VERDE"}
-    ]
-    scelta = random.choice(scenari)
-    st.session_state.evento_corrente = {
-        "comune": random.choice(comuni),
-        "via": f"{random.choice(vie)}, {random.randint(1, 100)}",
-        "lat": 45.69 + random.uniform(-0.05, 0.05),
-        "lon": 9.66 + random.uniform(-0.05, 0.05),
-        "sintomi": scelta["sintomi"],
-        "codice": scelta["codice"]
-    }
-    st.session_state.last_mission_time = time.time()
-    st.toast(f"🚨 NUOVA CHIAMATA: {scelta['codice']}")
 
 def gestione_db(azione, dati=None):
     conn = sqlite3.connect('centrale.db')
@@ -76,16 +51,33 @@ def gestione_db(azione, dati=None):
     conn.commit()
     conn.close()
 
-# Esegui init DB
+def genera_missione_casuale():
+    """Genera una missione con chiavi standardizzate per evitare KeyError"""
+    comuni = ["Bergamo", "Seriate", "Dalmine", "Stezzano", "Treviglio"]
+    scenari = [
+        {"sintomi": "Dolore toracico", "codice": "ROSSO"},
+        {"sintomi": "Difficoltà respiratoria", "codice": "GIALLO"},
+        {"sintomi": "Caduta accidentale", "codice": "VERDE"}
+    ]
+    scelta = random.choice(scenari)
+    # UNIFICAZIONE CHIAVI: Usiamo sempre 'codice', 'comune', 'via', 'sintomi'
+    st.session_state.evento_corrente = {
+        "comune": random.choice(comuni),
+        "via": f"Via Roma {random.randint(1,100)}",
+        "codice": scelta["codice"],
+        "sintomi": scelta["sintomi"]
+    }
+    st.session_state.last_mission_time = time.time()
+    st.toast(f"🚨 NUOVO TARGET: {scelta['codice']}")
+
+# Inizializza DB
 gestione_db("init")
 
 # =========================================================
-# 4. LOGICA DI ACCESSO E UI
+# 3. LOGICA DI ACCESSO
 # =========================================================
-
-# --- SCHERMATA LOGIN ---
 if st.session_state.utente_connesso is None:
-    st.title("🚑 SOREU Alpina - Accesso")
+    st.title("🚑 SOREU Alpina - Login")
     u = st.text_input("Username").lower().strip()
     p = st.text_input("Password", type="password")
     if st.button("ACCEDI"):
@@ -96,48 +88,59 @@ if st.session_state.utente_connesso is None:
         else: st.error("Credenziali errate")
     st.stop()
 
-# --- SELEZIONE POSTAZIONE / GESTIONE ADMIN ---
+# =========================================================
+# 4. SELEZIONE POSTAZIONE E GESTIONE ADMIN
+# =========================================================
 if st.session_state.scrivania_selezionata is None:
     st.title(f"Operatore: {st.session_state.utente_connesso.upper()}")
     
     if st.session_state.utente_connesso == 'admin':
-        with st.expander("🛠️ PANNELLO ADMIN (Gestione Accessi)"):
-            nu = st.text_input("Nuovo Operatore")
-            np = st.text_input("Password")
-            if st.button("Crea Utente"):
-                gestione_db("aggiungi", (nu.lower().strip(), np))
-                st.success("Utente creato con successo!")
+        with st.expander("🛠️ GESTIONE TEAM (Admin Only)"):
+            c1, c2 = st.columns(2)
+            with c1:
+                nu = st.text_input("Nuovo Username")
+                np = st.text_input("Password Temporanea")
+                if st.button("Crea Utente"):
+                    gestione_db("aggiungi", (nu.lower().strip(), np))
+                    st.success("Utente registrato")
+            with c2:
+                # Visualizzazione rapida utenti
+                conn = sqlite3.connect('centrale.db')
+                st.dataframe(pd.read_sql_query("SELECT username FROM utenti", conn))
+                conn.close()
 
-    st.subheader("Scegli Scrivania:")
+    st.subheader("Seleziona Postazione:")
     cols = st.columns(3)
     for i in range(1, 10):
         with cols[(i-1)%3]:
-            txt = "ADMIN" if st.session_state.utente_connesso == 'admin' else f"DESK {i}"
-            if st.button(f"🖥️ {txt}", use_container_width=True):
-                st.session_state.scrivania_selezionata = txt
+            label = "ADMIN" if st.session_state.utente_connesso == 'admin' else f"DESK {i}"
+            if st.button(f"🖥️ {label}", use_container_width=True):
+                st.session_state.scrivania_selezionata = label
                 st.session_state.ruolo = "centrale"
                 st.rerun()
     st.stop()
 
-# --- CENTRALE OPERATIVA ---
+# =========================================================
+# 5. INTERFACCIA OPERATIVA
+# =========================================================
 with st.sidebar:
     st.header(st.session_state.utente_connesso.upper())
-    st.write(f"Postazione: {st.session_state.scrivania_selezionata}")
     if st.button("Logout"):
         st.session_state.scrivania_selezionata = None
         st.rerun()
     
     st.divider()
-    st.session_state.auto_mission_active = st.toggle("🚨 Generatore Missioni", st.session_state.auto_mission_active)
+    st.session_state.auto_mission_active = st.toggle("🚨 Missioni Automatiche", st.session_state.auto_mission_active)
     if st.session_state.auto_mission_active:
-        st.session_state.freq_missioni = st.slider("Secondi", 20, 120, 60)
-        cd = int(st.session_state.freq_missioni - (time.time() - st.session_state.last_mission_time))
+        freq = st.slider("Secondi", 20, 120, 60)
+        cd = int(freq - (time.time() - st.session_state.last_mission_time))
         st.info(f"Prossima chiamata: {max(0, cd)}s")
         if cd <= 0 and not st.session_state.evento_corrente:
-            genera_missione_casuale() # Ora la funzione è definita e visibile!
+            genera_missione_casuale()
             st.rerun()
 
-st.title("SOREU Alpina - Sala Operativa")
+st.title(f"SALA OPERATIVA - {st.session_state.scrivania_selezionata}")
+
 if not st.session_state.turno_iniziato:
     if st.button("🟢 APRI TURNO", type="primary", use_container_width=True):
         st.session_state.turno_iniziato = True
@@ -145,17 +148,20 @@ if not st.session_state.turno_iniziato:
 else:
     c1, c2 = st.columns([1, 2])
     with c1:
-        st.subheader("Chiamate in arrivo")
+        st.subheader("☎️ Emergenze in Carico")
         if st.session_state.evento_corrente:
             ev = st.session_state.evento_corrente
-            st.error(f"EMERGENZA: {ev['codice']} - {ev['comune']}")
-            st.write(f"Indirizzo: {ev['via']}")
-            if st.button("GESTITO"):
+            # Qui usiamo la chiave 'codice' che è garantita dalla funzione genera_missione_casuale
+            st.error(f"CODICE {ev['codice']} - {ev['comune']}")
+            st.write(f"**Indirizzo:** {ev['via']}")
+            st.info(f"**Sintomi:** {ev['sintomi']}")
+            if st.button("CHIUDI SCHEDA"):
                 st.session_state.evento_corrente = None
                 st.rerun()
-        else: st.success("Nessuna chiamata")
+        else:
+            st.success("Linee libere. Nessun evento.")
     with c2:
-        st.subheader("Mappa")
+        st.subheader("🗺️ Mappa Territorio")
         st.map()
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
