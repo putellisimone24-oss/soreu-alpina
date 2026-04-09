@@ -613,7 +613,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                 st.rerun()
                        
                                 for m_scelto in mezzi_scelti:
-                                if not st.session_state.auto_mode:
+                                    if not st.session_state.auto_mode:
                                     st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                     aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
                                 st.session_state.missioni[m_scelto] = {
