@@ -588,7 +588,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                     except:
                                         pass
 
-                               # 3. Ciclo Assegnazione Mezzi
+                            # 3. Ciclo Assegnazione Mezzi
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
@@ -613,7 +613,8 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                 st.session_state.evento_corrente = None
                                 st.rerun()
 
-            # --- ORA TORNIAMO INDIETRO PER LA SECONDA COLONNA ---
+            # --- CORREZIONE INDENTAZIONE ---
+            # Questo blocco deve essere allineato con il "with col_info:" (o colonna precedente)
             with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
@@ -633,31 +634,39 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                 if st.session_state.registro_radio:
                     box_testo = "\n".join(st.session_state.registro_radio[:15])
                     st.text_area(label="Comunicazioni Voce", value=box_testo, height=150, disabled=True)           
+                
                 st.subheader("📋 Missioni in Corso")
                 if st.session_state.missioni:
                     for m, dati in st.session_state.missioni.items():
                         c_m, c_o = st.columns([2, 1])
-                        with c_m: st.write(f"🚑 **{m}** -> {dati['target']} ({st.session_state.database_mezzi[m]['stato']})")
+                        with c_m: 
+                            st.write(f"🚑 **{m}** -> {dati['target']} ({st.session_state.database_mezzi[m]['stato']})")
                         with c_o:
                             nuovo_osp = st.selectbox(f"Osp. per {m}", list(st.session_state.database_ospedali.keys()), key=f"sel_osp_{m}")
                             if nuovo_osp != dati.get("ospedale_confermato", dati["ospedale_assegnato"]):
-                                st.session_state.missioni[m]["ospedale_confermato"] = nuovo_osp; st.toast(f"Ospedale aggiornato per {m} -> {nuovo_osp}")
-                else: st.caption("Nessuna missione in corso.")
-        
+                                st.session_state.missioni[m]["ospedale_confermato"] = nuovo_osp
+                                st.toast(f"Ospedale aggiornato per {m} -> {nuovo_osp}")
+                else: 
+                    st.caption("Nessuna missione in corso.")
+
+        # Allineamento schede (Tabs)
         with tab_risorse:
             st.header("🚑 Stato Risorse Territoriali")
-            for m, d in st.session_state.database_mezzi.items(): st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
+            for m, d in st.session_state.database_mezzi.items(): 
+                st.write(f"**{m}** ({d['tipo']}): {d['stato']}")
                 
         with tab_ps:
             st.header("🏥 Saturazione Pronto Soccorso")
             for osp, dati in st.session_state.database_ospedali.items():
-                col_info, col_azione = st.columns([3, 1])
-                with col_info:
+                col_i, col_a = st.columns([3, 1])
+                with col_i:
                     st.write(f"**{osp}** ({dati['pazienti']} / {dati['max']})")
                     st.progress((dati["pazienti"] / dati["max"]))
-                with col_azione:
+                with col_a:
                     if st.button(f"Libera Posto", key=f"dim_{osp}"):
-                        if dati["pazienti"] > 0: st.session_state.database_ospedali[osp]["pazienti"] -= 1; st.rerun()
+                        if dati["pazienti"] > 0: 
+                            st.session_state.database_ospedali[osp]["pazienti"] -= 1
+                            st.rerun()
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
