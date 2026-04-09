@@ -669,3 +669,21 @@ else:
                     st.info(f"🚩 **Direzione:** {miss['target']}")
                 else:
                     st.success("Nessun paziente a bordo. In attesa di missione.")
+                    
+                    # COPIA E INCOLLA QUESTO ALLA FINE DEL FILE (CONTRO LA PARETE SINISTRA)
+conn_ponte = sqlite3.connect('centrale.db')
+c_ponte = conn_ponte.cursor()
+c_ponte.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
+             (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
+
+if st.session_state.evento_corrente:
+    ev = st.session_state.evento_corrente
+    keywords = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
+    if any(p in ev['sintomi'] for p in keywords):
+        # Controlla se l'abbiamo già inviata per non duplicarla
+        c_ponte.execute("SELECT * FROM missioni_vvf WHERE scenario=? AND ora=?", (ev['sintomi'], datetime.now().strftime("%H:%M")))
+        if not c_ponte.fetchone():
+            c_ponte.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
+                         (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto."))
+            conn_ponte.commit()
+conn_ponte.close()
