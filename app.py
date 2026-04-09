@@ -306,40 +306,71 @@ if st.session_state.auto_mode and st.session_state.missioni and st.session_state
 # Definiti fuori dalle funzioni per essere leggibili ovunque (Fix NameError)
 
 database_indirizzi = [
-    # --- AREA BERGAMO ---
-    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
-    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
-    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
-    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine", "lat": 45.648, "lon": 9.602},
-    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
-    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
-    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero Alpino", "lat": 45.912, "lon": 10.081},
-    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
-    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
+    # --- BERGAMO CITTÀ E HINTERLAND ---
+    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS - Piazzale Arrivi", "lat": 45.691, "lon": 9.675},
+    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss - Ingresso Tribuna", "lat": 45.709, "lon": 9.681},
+    {"comune": "Bergamo", "via": "Via Gombito", "target": "Città Alta - Torre del Gombito", "lat": 45.704, "lon": 9.663},
+    {"comune": "Bergamo", "via": "Via Tiraboschi", "target": "Zona Centro / Coin", "lat": 45.694, "lon": 9.670},
+    {"comune": "Bergamo", "via": "Largo Barozzi", "target": "Ex Ospedali Riuniti", "lat": 45.698, "lon": 9.658},
+    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto - Terminal Arrivi", "lat": 45.666, "lon": 9.700},
+    {"comune": "Orio al Serio", "via": "Via Portico", "target": "Orio Center - Zona Food Court", "lat": 45.663, "lon": 9.693},
+    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine - Ingresso Merci", "lat": 45.648, "lon": 9.602},
+    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Parco Scientifico Kilometro Rosso", "lat": 45.641, "lon": 9.635},
+    {"comune": "Seriate", "via": "Via Paderno", "target": "Ospedale Bolognini - PS", "lat": 45.684, "lon": 9.721},
+    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio-Caravaggio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Treviglio", "via": "Via Verga", "target": "PalaFacchetti - Palazzetto Sport", "lat": 45.515, "lon": 9.595},
+
+    # --- BERGAMO PROVINCIA / VALLI ---
+    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Istituto Superiore Turoldo", "lat": 45.795, "lon": 9.664},
+    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Casinò", "lat": 45.835, "lon": 9.665},
     {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071},
-    # --- AREA BRESCIA ---
-    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
-    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
-    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
-    {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
-    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto G. D'Annunzio", "lat": 45.428, "lon": 10.330},
-    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
-    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
-    {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
+    {"comune": "Sarnico", "via": "Via Roma", "target": "Lido Nettuno", "lat": 45.666, "lon": 9.912},
+    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio Passo Presolana", "lat": 45.912, "lon": 10.081},
+    {"comune": "Clusone", "via": "Via Dante", "target": "Piazza dell'Orologio", "lat": 45.883, "lon": 9.950},
+
+    # --- BRESCIA CITTÀ E HINTERLAND ---
+    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Palazzo Loggia - Centro", "lat": 45.539, "lon": 10.220},
+    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Spedali Civili - DEA I livello", "lat": 45.551, "lon": 10.228},
+    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti - Settore Ospiti", "lat": 45.568, "lon": 10.235},
+    {"comune": "Brescia", "via": "Via Einaudi", "target": "C.C. Elnòs Shopping", "lat": 45.518, "lon": 10.165},
+    {"comune": "Brescia", "via": "Corso Magenta", "target": "Conservatorio Luca Marenzio", "lat": 45.535, "lon": 10.225},
+    {"comune": "Brescia", "via": "Via San Faustino", "target": "Zona Universitaria", "lat": 45.543, "lon": 10.221},
+    {"comune": "Roncadelle", "via": "Via Valle Camonica", "target": "Zona Commerciale Ikea", "lat": 45.525, "lon": 10.155},
+
+    # --- BRESCIA LAGHI E VALLI ---
+    {"comune": "Desenzano del Garda", "via": "Lungolago Battisti", "target": "Porto e Imbarcadero", "lat": 45.470, "lon": 10.539},
+    {"comune": "Desenzano del Garda", "via": "Via Andreis", "target": "Pronto Soccorso Desenzano", "lat": 45.474, "lon": 10.512},
+    {"comune": "Sirmione", "via": "Piazza Castello", "target": "Ingresso Castello Scaligero", "lat": 45.492, "lon": 10.608},
+    {"comune": "Sirmione", "via": "Via Colombare", "target": "Terme di Sirmione", "lat": 45.485, "lon": 10.600},
+    {"comune": "Salò", "via": "Piazza Vittorio Emanuele", "target": "Lungolago Zanardelli", "lat": 45.607, "lon": 10.525},
+    {"comune": "Gavardo", "via": "Via Gosa", "target": "Ospedale di Gavardo", "lat": 45.588, "lon": 10.438},
+    {"comune": "Gardone Riviera", "via": "Via Vittoriale", "target": "Vittoriale degli Italiani", "lat": 45.624, "lon": 10.565},
+    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Terme di Boario", "lat": 45.888, "lon": 10.188},
+    {"comune": "Darfo Boario Terme", "via": "Via Valeriana", "target": "Stazione FS Boario", "lat": 45.890, "lon": 10.185},
+    {"comune": "Esine", "via": "Via Manzoni", "target": "Ospedale di Esine", "lat": 45.824, "lon": 10.215},
+    {"comune": "Edolo", "via": "Via Marconi", "target": "Bivio per Tonale/Aprica", "lat": 46.172, "lon": 10.330},
+    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lido di Iseo", "lat": 45.659, "lon": 10.051},
+    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto di Montichiari", "lat": 45.428, "lon": 10.330},
+    {"comune": "Chiari", "via": "Piazza Martiri", "target": "Duomo di Chiari", "lat": 45.538, "lon": 9.924},
+    {"comune": "Manerbio", "via": "Via S. Martino del Carso", "target": "Ospedale di Manerbio", "lat": 45.352, "lon": 10.138}
 ]
 
 scenari_clinici = [
-    {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico", "codice_reale": "ROSSO", "tipo": "Cardio", "necessita_msa": True},
     {"sintomi": "Arresto Cardio-Respiratorio - Manovre in corso", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
-    {"sintomi": "Sospetto ICTUS (Stroke) - Afasia", "codice_reale": "ROSSO", "tipo": "Neuro", "necessita_msa": True},
-    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
-    {"sintomi": "Infortunio sul Lavoro - Schiacciamento", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
-    {"sintomi": "Annegamento / Malore in acqua", "codice_reale": "ROSSO", "tipo": "Ambiente", "necessita_msa": True},
-    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "necessita_msa": False},
-    {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "necessita_msa": False},
-    {"sintomi": "Dolore addominale acuto", "codice_reale": "GIALLO", "tipo": "Addominale", "necessita_msa": False},
-    {"sintomi": "Paziente anziano con febbre alta", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
-    {"sintomi": "Lieve trauma distorsivo caviglia", "codice_reale": "VERDE", "tipo": "Trauma", "necessita_msa": False}
+    {"sintomi": "Sospetto IMA (Infarto) - Forte dolore precordiale", "codice_reale": "ROSSO", "tipo": "Cardiologico", "necessita_msa": True},
+    {"sintomi": "Sospetto ICTUS (Stroke) - Emiparesi e afasia", "codice_reale": "ROSSO", "tipo": "Neurologico", "necessita_msa": True},
+    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore - Politrauma", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
+    {"sintomi": "Infortunio sul Lavoro - Schiacciamento toracico", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
+    {"sintomi": "Caduta da grande altezza - Incosciente", "codice_reale": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
+    {"sintomi": "Annegamento / Grave malore in acqua", "codice_reale": "ROSSO", "tipo": "Ambientale", "necessita_msa": True},
+    {"sintomi": "Crisi Epilettica in atto - Convulsioni toniche", "codice_reale": "GIALLO", "tipo": "Neurologico", "necessita_msa": False},
+    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Traumatologico", "necessita_msa": False},
+    {"sintomi": "Dolore addominale acuto - Segni di peritonismo", "codice_reale": "GIALLO", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Dispnea in paziente asmatico - Non risponde a farmaci", "codice_reale": "GIALLO", "tipo": "Respiratorio", "necessita_msa": False},
+    {"sintomi": "Paziente anziano con febbre alta e disorientamento", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Lieve trauma distorsivo durante attività sportiva", "codice_reale": "VERDE", "tipo": "Traumatologico", "necessita_msa": False},
+    {"sintomi": "Epistassi massiva che non si arresta", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Piccola ustione domestica a braccio", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False}
 ]
 
 # =========================================================
