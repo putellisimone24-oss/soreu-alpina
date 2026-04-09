@@ -547,13 +547,49 @@ else:
                                 
                             for m_scelto in mezzi_scelti:
                                 if not st.session_state.auto_mode:
-                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
+                                    st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
+                                    st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                     aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
+                                
                                 st.session_state.missioni[m_scelto] = {
                                     "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
                                     "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
                                     "timestamp_creazione": time.time(), "richiesto_ospedale": False,
                                     "patologia": ev.get("sintomi", "Generica")
+                                }
+
+                            # =========================================================
+                            # 🚒 LOGICA INTEGRATA SOREU - VVF (AGGIUNTA QUI)
+                            # =========================================================
+                            keys_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
+                            
+                            # Se i sintomi contengono una delle parole chiave, invia ai VVF
+                            if any(k.lower() in ev.get('sintomi', '').lower() for k in keys_vvf):
+                                try:
+                                    conn_vvf = sqlite3.connect('centrale.db')
+                                    c_vvf = conn_vvf.cursor()
+                                    
+                                    # Assicurati che la tabella esista nel DB comune
+                                    c_vvf.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
+                                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                                                  scenario TEXT, comune TEXT, indirizzo TEXT, 
+                                                  stato_vvf TEXT, ora TEXT, note TEXT)''')
+                                    
+                                    # Inserimento missione per il monitor VVF
+                                    c_vvf.execute('''INSERT INTO missioni_vvf 
+                                                 (scenario, comune, indirizzo, stato_vvf, ora, note) 
+                                                 VALUES (?, ?, ?, ?, ?, ?)''', 
+                                                 (ev['sintomi'], ev['comune'], ev['via'], "ALLERTATI", datetime.now().strftime("%H:%M"), "Richiesto supporto da SOREU Alpina"))
+                                    
+                                    conn_vvf.commit()
+                                    conn_vvf.close()
+                                    st.toast("🚒 Missione trasmessa ai Vigili del Fuoco!", icon="🔥")
+                                except Exception as e:
+                                    st.error(f"Errore ponte VVF: {e}")
+                            # =========================================================
+
+                            st.session_state.evento_corrente = None
+                            st.rerun()
                                 }
                             st.session_state.evento_corrente = None; st.rerun()
                     else: st.error("Nessun mezzo disponibile!")
