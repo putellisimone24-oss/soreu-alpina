@@ -150,11 +150,31 @@ def calcola_distanza_e_tempo(lat1, lon1, lat2, lon2, is_eli=False):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     distanza = R * c
     velocita = 220.0 if is_eli else 45.0
-    tempo_minuti = round((distanza / velocita) * 60)
-    if is_eli: tempo_minuti += 2
-    if tempo_minuti < 1: tempo_minuti = 1
-    return round(distanza, 1), tempo_minuti
+    # LOGICA DI GENERAZIONE MISSIONI
+tempo_base = 120
+tempo_necessario = tempo_base / st.session_state.time_mult
 
+if st.session_state.turno_iniziato and (time.time() - st.session_state.last_mission_time > tempo_necessario):
+    if not st.session_state.evento_corrente:
+        # Usa i nuovi database
+        scelta_indirizzo = random.choice(DATABASE_INDIRIZZI)
+        scelta_clinica = random.choice(SCENARI_CLINICI)
+        
+        st.session_state.evento_corrente = {
+            "comune": scelta_indirizzo["comune"], 
+            "via": scelta_indirizzo["via"],
+            "target": scelta_indirizzo["target"], # Aggiunto target specifico
+            "lat": scelta_indirizzo["lat"], 
+            "lon": scelta_indirizzo["lon"],
+            "sintomi": scelta_clinica["sintomi"], 
+            "codice_reale": scelta_clinica["codice"], # Mappato su codice
+            "necessita_msa": scelta_clinica["necessita_msa"],
+            "tipo_evento": scelta_clinica["tipo"]
+        }
+        st.session_state.last_mission_time = time.time()
+        st.session_state.log_chiamate.append(f"{scelta_indirizzo['target']} - {scelta_indirizzo['comune']}")
+        st.session_state.suono_riprodotto = False
+        
 def aggiungi_log_radio(mittente, messaggio):
     orario = datetime.now().strftime("%H:%M:%S")
     st.session_state.registro_radio.insert(0, f"[{orario}] 📻 {mittente}: {messaggio}")
