@@ -588,7 +588,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                     except:
                                         pass
 
-                                # 3. Ciclo Assegnazione Mezzi
+                               # 3. Ciclo Assegnazione Mezzi
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
                                         st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
@@ -612,22 +612,27 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                 # 4. Reset Evento e Chiusura Scheda
                                 st.session_state.evento_corrente = None
                                 st.rerun()
-    
-    with col_mappa:
+
+            # --- ORA TORNIAMO INDIETRO PER LA SECONDA COLONNA ---
+            with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
+                
                 if st.session_state.evento_corrente:
-                    ev = st.session_state.evento_corrente
+                    ev_map = st.session_state.evento_corrente
                     for i in range(0, 360, 45):
-                        punti_mappa.append({"lat": ev["lat"] + 0.005 * math.cos(math.radians(i)), "lon": ev["lon"] + 0.005 * math.sin(math.radians(i))})
+                        punti_mappa.append({
+                            "lat": ev_map["lat"] + 0.005 * math.cos(math.radians(i)), 
+                            "lon": ev_map["lon"] + 0.005 * math.sin(math.radians(i))
+                        })
                         
-                if punti_mappa: st.map(pd.DataFrame(punti_mappa), zoom=9)
+                if punti_mappa: 
+                    st.map(pd.DataFrame(punti_mappa), zoom=9)
                 
                 st.subheader("📻 Registro Radio SOREU")
                 if st.session_state.registro_radio:
                     box_testo = "\n".join(st.session_state.registro_radio[:15])
-                    st.text_area(label="Comunicazioni Voce", value=box_testo, height=150, disabled=True)
-                
+                    st.text_area(label="Comunicazioni Voce", value=box_testo, height=150, disabled=True)           
                 st.subheader("📋 Missioni in Corso")
                 if st.session_state.missioni:
                     for m, dati in st.session_state.missioni.items():
