@@ -342,6 +342,13 @@ scenari_clinici = [
     {"sintomi": "Lieve trauma distorsivo caviglia", "codice_reale": "VERDE", "tipo": "Trauma", "necessita_msa": False}
 ]
 
+nuovi_scenari_tecnici = [
+    {"sintomi": "Incidente Stradale", "criticita": "ROSSO", "note": "Scontro frontale, possibile incastrato"},
+    {"sintomi": "Incendio Abitazione", "criticita": "ROSSO", "note": "Fumo dal secondo piano, persone all'interno"},
+    {"sintomi": "Schiacciamento", "criticita": "ROSSO", "note": "Infortunio agricolo/industriale"},
+    {"sintomi": "Incastrato in Macchinario", "criticita": "ROSSO", "note": "Arto superiore intrappolato"}
+]
+
 # =========================================================
 # 2. LOGICA DI SISTEMA
 # =========================================================
