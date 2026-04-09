@@ -7,110 +7,80 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. GESTIONE DATABASE E STATO
+# 1. GESTIONE DATABASE PERSISTENTE (SQLITE) - AGGIUNTO
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
+    
     c.execute("SELECT COUNT(*) FROM utenti")
     if c.fetchone()[0] == 0:
         utenti_iniziali = [
             ('admin', 'admin', 0, 'Admin'),
             ('simone.putelli', 'simone', 1, 'Operatore'),
-            ('simone.marinoni', 'simone', 1, 'Operatore'),
-            ('andrea.giuliano', 'andrea', 1, 'Operatore')
+            ('simone.marinoni', 'simone', 1, 'Operatore')
         ]
         c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
     conn.commit()
     conn.close()
 
+def get_utente_db(username):
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    c.execute("SELECT username, password, cambio_obbligatorio, ruolo FROM utenti WHERE username=?", (username,))
+    res = c.fetchone()
+    conn.close()
+    return res
+
+def aggiorna_password_db(username, nuova_pw):
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
+    conn.commit()
+    conn.close()
+
 init_db()
 
-# Configurazione Pagina
-st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
-
-# Inizializzazione Session State
-if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
-if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
-if 'ruolo' not in st.session_state: st.session_state.ruolo = None
-if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
-
 # =========================================================
-# 2. LOGIN
+# 2. SCHERMATA LOGIN (PRIMA DI TUTTO IL RESTO)
 # =========================================================
+st.set_page_config(page_title="SOREU Alpina - Simulatore 118", layout="wide")
+
+if 'utente_connesso' not in st.session_state:
+    st.session_state.utente_connesso = None
+if 'fase_cambio_pw' not in st.session_state:
+    st.session_state.fase_cambio_pw = False
+
 if st.session_state.utente_connesso is None:
     st.title("🔐 SOREU Alpina - Login")
-    u_in = st.text_input("Username").lower().strip()
-    p_in = st.text_input("Password", type="password")
-    if st.button("ACCEDI", type="primary"):
-        conn = sqlite3.connect('centrale.db')
-        c = conn.cursor()
-        c.execute("SELECT password FROM utenti WHERE username=?", (u_in,))
-        res = c.fetchone()
-        conn.close()
-        if res and res[0] == p_in:
-            st.session_state.utente_connesso = u_in
-            st.rerun()
-        else: st.error("Credenziali errate")
-    st.stop()
-
-# =========================================================
-# 3. SELEZIONE POSTAZIONE (UNICA E PULITA)
-# =========================================================
-if st.session_state.scrivania_selezionata is None:
-    st.title(f"🎧 SOREU Alpina - Sala Operativa")
-    st.write(f"Utente: **{st.session_state.utente_connesso.upper()}**")
-
-    # --- PANNELLO GESTIONE ACCOUNT (Solo Admin) ---
-    if st.session_state.utente_connesso == 'admin':
-        with st.expander("🛠️ GESTIONE ACCOUNT OPERATORI"):
-            col1, col2 = st.columns(2)
-            conn = sqlite3.connect('centrale.db')
-            with col1:
-                st.write("**Aggiungi Operatore**")
-                new_u = st.text_input("Username", key="reg_u").lower().strip()
-                new_p = st.text_input("Password", type="password", key="reg_p")
-                if st.button("Salva Nuovo Utente"):
-                    if new_u and new_p:
-                        try:
-                            c = conn.cursor()
-                            c.execute("INSERT INTO utenti VALUES (?,?,1,'Operatore')", (new_u, new_p))
-                            conn.commit()
-                            st.success(f"Utente {new_u} creato!"); st.rerun()
-                        except: st.error("Errore: esiste già.")
-            with col2:
-                st.write("**Elimina Operatore**")
-                df_u = pd.read_sql_query("SELECT username FROM utenti WHERE username != 'admin'", conn)
-                u_to_del = st.selectbox("Seleziona utente", df_u['username'].tolist() if not df_u.empty else ["-"])
-                if st.button("Elimina Account", type="primary"):
-                    if u_to_del != "-":
-                        c = conn.cursor()
-                        c.execute("DELETE FROM utenti WHERE username=?", (u_to_del,))
-                        conn.commit()
-                        st.success("Eliminato!"); st.rerun()
-            conn.close()
-    
-    st.divider()
-    st.subheader("🖥️ Selezione Postazione di Lavoro")
-    
-    # Griglia Scrivanie (9 Desk)
-    cols = st.columns(3)
-    for i in range(1, 10):
-        with cols[(i-1)%3]:
-            label = "SALA - ADMIN" if st.session_state.utente_connesso == 'admin' else f"SALA - DESK {i}"
-            if st.button(f"🖥️ {label}", key=f"desk_select_{i}", use_container_width=True):
-                st.session_state.scrivania_selezionata = label
-                st.session_state.ruolo = "centrale"
+    if st.session_state.fase_cambio_pw:
+        st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
+        n_p = st.text_input("Nuova Password", type="password")
+        c_p = st.text_input("Conferma Password", type="password")
+        if st.button("SALVA E ACCEDI"):
+            if n_p == c_p and len(n_p) >= 4:
+                aggiorna_password_db(st.session_state.temp_user, n_p)
+                st.session_state.utente_connesso = st.session_state.temp_user
                 st.rerun()
-    
-    st.divider()
-    if st.button("🚑 Accedi come Equipaggio Mezzo (Esterno)", use_container_width=True):
-        st.session_state.scrivania_selezionata = "MEZZO"
-        st.session_state.ruolo = "mezzo"
-        st.rerun()
-    st.stop()
+            else: st.error("Errore nelle password (minimo 4 caratteri).")
+    else:
+        u_in = st.text_input("Username").lower().strip()
+        p_in = st.text_input("Password", type="password")
+        if st.button("ACCEDI", type="primary"):
+            user_data = get_utente_db(u_in)
+            if user_data and user_data[1] == p_in:
+                if user_data[2] == 1:
+                    st.session_state.fase_cambio_pw = True
+                    st.session_state.temp_user = u_in
+                    st.rerun()
+                else:
+                    st.session_state.utente_connesso = u_in
+                    st.rerun()
+            else: st.error("ID o Password errati.")
+    st.stop() # Blocca il resto del codice finché non sei loggato
+
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
 # =========================================================
@@ -125,99 +95,23 @@ def riproduci_suono_notifica():
     sound_html = f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>'
     st.components.v1.html(sound_html, height=0, width=0)
 
-# =========================================================
-# DATABASE MEZZI SOREU ALPINA - CONFIGURAZIONE REALE
-# =========================================================
+# 1. DATABASE MEZZI SANITARI REALI
 if 'database_mezzi' not in st.session_state:
     st.session_state.database_mezzi = {
-        # --- AREA TREVIGLIO, CARAVAGGIO & BASSA ---
-        "MSA 2 TREVIGLIO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Automedica - P.le Luigi Meneguzzo, Treviglio", "lat": 45.5185, "lon": 9.5998
-        },
-        "CRITRE_124.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Treviglio - Via Abate Crippa 34/B", "lat": 45.5242, "lon": 9.5912
-        },
-        "CRITRE_135.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Castel Rozzone - Via Monte Cervino 7", "lat": 45.5528, "lon": 9.6205
-        },
-        "COOP_ATA_TREV": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "COOP ATA Treviglio", "lat": 45.5210, "lon": 9.5930
-        },
-
-        # --- AREA BERGAMO & HINTERLAND ---
-        "MSA 2 BERGAMO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Ospedale Papa Giovanni XXIII", "lat": 45.6869, "lon": 9.6272
-        },
-        "MSA 1 DALMINE": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Dalmine (Infermieristica)", "lat": 45.6475, "lon": 9.6012
-        },
-        "CRI_BG_101.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Bergamo - Via Croce Rossa", "lat": 45.6948, "lon": 9.6761
-        },
-        "BIANCA_BG_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Bianca Bergamo", "lat": 45.7010, "lon": 9.6620
-        },
-        "VERDE_BG_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Verde Bergamo", "lat": 45.6980, "lon": 9.6800
-        },
-        "PADANA_BG": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Padana Emergenza", "lat": 45.6850, "lon": 9.6500
-        },
-
-        # --- VALLE SERIANA, BREMBANA & SCALVE ---
-        "MSA 1 ALZANO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Alzano Lombardo", "lat": 45.7310, "lon": 9.7280
-        },
-        "ELI BERGAMO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
-            "sede": "Base Elisoccorso Bergamo", "lat": 45.6710, "lon": 9.7020
-        },
-        "BLU_GROMO_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Blu Gromo", "lat": 45.9180, "lon": 9.9270
-        },
-        "VERDE_VALSER_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Verde Valserina", "lat": 45.8330, "lon": 9.7250
-        },
-        "CRI_SANPEL_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI San Pellegrino Terme", "lat": 45.8360, "lon": 9.6660
-        },
-        "VAB_BREMBILLA": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "VAB Brembilla", "lat": 45.8230, "lon": 9.5970
-        },
-
-        # --- AREA LAGHI E ALTRE ASSOCIAZIONI ---
-        "BLU_LOVERE_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Blu Lovere", "lat": 45.8140, "lon": 10.0710
-        },
-        "AZZURRA_ALMENNO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Azzurra Almenno", "lat": 45.7440, "lon": 9.5890
-        },
-        "SOCCORSO_CISANESE": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Soccorso Cisanese", "lat": 45.7430, "lon": 9.4770
-        },
-        "VOLONTARI_TREVIOLO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Volontari Treviolo", "lat": 45.6730, "lon": 9.6100
-        }
+        "MSA 02 001": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6869, "lon": 9.6272, "tipo": "MSA", "sede": "Osp. Papa Giovanni XXIII"},
+        "MSA 2 004": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5220, "lon": 9.5990, "tipo": "MSA", "sede": "Osp. Treviglio"},
+        "MSA 1 003": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5203, "lon": 9.7547, "tipo": "MSA", "sede": "Osp. Romano"},
+        "CRI_BG_161.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
+        "CRI_BG_162.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
+        "CBBG_014.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6725, "lon": 9.6450, "tipo": "MSB", "sede": "Croce Bianca Bergamo"},
+        "CABG_301.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.7100, "lon": 9.6500, "tipo": "MSB", "sede": "Croce Azzurra Almenno"},
+        "CRITRE_124.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5268, "lon": 9.5925, "tipo": "MSB", "sede": "CRI Treviglio"},
+        "CRITRE_135.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5532, "lon": 9.6198, "tipo": "MSB", "sede": "CRI Treviglio"},
+        "CRIHBG_154.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5940, "lon": 9.6910, "tipo": "MSB", "sede": "CRI Urgnano"},
+        "CRIDAL_118.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6475, "lon": 9.6012, "tipo": "MSB", "sede": "CRI Dalmine"},
+        "HORUS I-LMBD": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso Bergamo"}
     }
+
 # 2. DATABASE OSPEDALI REALI
 if 'database_ospedali' not in st.session_state:
     st.session_state.database_ospedali = {
@@ -323,65 +217,22 @@ def aggiorna_stati_automatici():
 if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
     aggiorna_stati_automatici()
 
-def genera_missione_casuale():
-    """Genera missioni variegate e realistiche per SOREU Alpina"""
-    
-    # Database di indirizzi reali per aumentare il realismo
-    database_indirizzi = [
-        {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS"},
-        {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss"},
-        {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio"},
-        {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)"},
-        {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Centro Commerciale Le Due Torri"},
-        {"comune": "Seriate", "via": "Via Paderno", "target": "Ospedale Bolognini"},
-        {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio-Caravaggio"},
-        {"comune": "Castione della Presolana", "via": "Via Passo della Presolana", "target": "Rifugio Alpino"},
-        {"comune": "Zogno", "via": "Via Martiri della Libertà", "target": "Centro Scolastico"},
-        {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico"},
-        {"comune": "Romano di Lombardia", "via": "Via Albarotto", "target": "Zona Industriale"},
-        {"comune": "San Pellegrino Terme", "via": "Viale della Vittoria", "target": "QC Terme"},
-        {"comune": "Clusone", "via": "Via Roma", "target": "Piazza dell'Orologio"}
-    ]
+# DATABASE EVENTI CLINICI
+database_indirizzi = [
+    {"comune": "Bergamo", "via": "Via della Croce Rossa 2", "lat": 45.6928, "lon": 9.6428},
+    {"comune": "Bergamo", "via": "Piazza Vecchia", "lat": 45.7042, "lon": 9.6622},
+    {"comune": "Treviglio", "via": "Via Roma 12", "lat": 45.5268, "lon": 9.5925},
+    {"comune": "Caravaggio", "via": "Piazza del Santuario 1", "lat": 45.5000, "lon": 9.6410},
+    {"comune": "Dalmine", "via": "Via Guzzanica 5", "lat": 45.6470, "lon": 9.6100},
+]
 
-    # Tipologie di scenari clinici avanzati
-    scenari = [
-        {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "tipo": "Cardiologico"},
-        {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "tipo": "Rianimatorio"},
-        {"sintomi": "Sospetto ICTUS (Stroke) - Deviazione rima buccale", "codice": "ROSSO", "tipo": "Neurologico"},
-        {"sintomi": "Incidente Stradale Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Infortunio sul Lavoro - Amputazione traumatica", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Investimento Pedone - Incosciente", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Caduta in falesia - Trauma cranico e spinale", "codice": "ROSSO", "tipo": "Montagna"},
-        {"sintomi": "Ostruzione vie aeree (PEDIATRICO)", "codice": "ROSSO", "tipo": "Pediatrico"},
-        {"sintomi": "Crisi respiratoria grave - Edema Polmonare", "codice": "ROSSO", "tipo": "Pneumologico"},
-        {"sintomi": "Crisi Epilettica in atto", "codice": "GIALLO", "tipo": "Neurologico"},
-        {"sintomi": "Dolore addominale acuto - Sospetta appendicite", "codice": "GIALLO", "tipo": "Addominale"},
-        {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "tipo": "Traumatologico"},
-        {"sintomi": "Stato di ebbrezza e ferita lacero contusa", "codice": "VERDE", "tipo": "Sociale/Etilista"},
-        {"sintomi": "Paziente con febbre e astenia", "codice": "VERDE", "tipo": "Medico"}
-    ]
-
-    # Selezione casuale dell'indirizzo e dello scenario
-    indirizzo = random.choice(database_indirizzi)
-    scelta = random.choice(scenari)
-
-    # Creazione dell'evento corrente nel Session State
-    st.session_state.evento_corrente = {
-        "comune": indirizzo["comune"],
-        "via": f"{indirizzo['via']}, {random.randint(1, 100)}",
-        "target": indirizzo["target"],
-        "codice": scelta["codice"],
-        "sintomi": scelta["sintomi"],
-        "tipo_clinico": scelta["tipo"],
-        "ora_chiamata": datetime.now().strftime("%H:%M:%S")
-    }
-
-    st.session_state.last_mission_time = time.time()
-    st.session_state.suono_riprodotto = False
-    
-    # Feedback visivo
-    st.toast(f"🚨 NUOVA CHIAMATA: {scelta['codice']} a {indirizzo['comune']} ({indirizzo['target']})", icon="☎️")
-    
+scenari_clinici = [
+    {"sintomi": "Uomo 60 anni, dolore forte retrosternale che irradia al braccio sinistro da 20 minuti.", "codice_reale": "ROSSO", "patologia": "Sospetto Infarto (IMA)", "necessita_msa": True},
+    {"sintomi": "Ragazzo caduto da moto, cosciente, dolore lancinante alla gamba destra con deformità.", "codice_reale": "GIALLO", "patologia": "Trauma Arto Inferiore", "necessita_msa": False},
+    {"sintomi": "Bambino di 4 anni con febbre a 39.5 e convulsioni in atto, i genitori sono nel panico.", "codice_reale": "ROSSO", "patologia": "Convulsione Febbrile", "necessita_msa": True},
+    {"sintomi": "Anziana scivolata in casa, impossibilitata ad alzarsi, riferisce lieve dolore all'anca.", "codice_reale": "VERDE", "patologia": "Caduta in casa", "necessita_msa": False},
+    {"sintomi": "Paziente trovato a terra incosciente, respiro agonico (gasping). Chiamante esegue massaggio.", "codice_reale": "ROSSO", "patologia": "Arresto Cardiaco", "necessita_msa": True}
+]
 
 tempo_base = 120
 tempo_necessario = tempo_base / st.session_state.time_mult
