@@ -217,21 +217,41 @@ def aggiorna_stati_automatici():
 if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
     aggiorna_stati_automatici()
 
-# DATABASE EVENTI CLINICI
-database_indirizzi = [
-    {"comune": "Bergamo", "via": "Via della Croce Rossa 2", "lat": 45.6928, "lon": 9.6428},
-    {"comune": "Bergamo", "via": "Piazza Vecchia", "lat": 45.7042, "lon": 9.6622},
-    {"comune": "Treviglio", "via": "Via Roma 12", "lat": 45.5268, "lon": 9.5925},
-    {"comune": "Caravaggio", "via": "Piazza del Santuario 1", "lat": 45.5000, "lon": 9.6410},
-    {"comune": "Dalmine", "via": "Via Guzzanica 5", "lat": 45.6470, "lon": 9.6100},
+# =========================================================
+# DATABASE MISSIONI E INDIRIZZI AGGIORNATO (PRO)
+# =========================================================
+
+# Database dei luoghi reali della provincia
+DATABASE_INDIRIZZI = [
+    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
+    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
+    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
+    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)", "lat": 45.648, "lon": 9.602},
+    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Centro Commerciale Le Due Torri", "lat": 45.641, "lon": 9.635},
+    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Castione della Presolana", "via": "Via Passo della Presolana", "target": "Rifugio / Sentiero Alpino", "lat": 45.912, "lon": 10.081},
+    {"comune": "Zogno", "via": "Via Martiri della Libertà", "target": "Centro Scolastico / Palestra", "lat": 45.795, "lon": 9.664},
+    {"comune": "San Pellegrino Terme", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
+    {"comune": "Osio Sotto", "via": "Corso Vittorio Veneto", "target": "Parco Pubblico", "lat": 45.618, "lon": 9.592},
+    {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico / Imbarcadero", "lat": 45.814, "lon": 10.071}
 ]
 
-scenari_clinici = [
-    {"sintomi": "Uomo 60 anni, dolore forte retrosternale che irradia al braccio sinistro da 20 minuti.", "codice_reale": "ROSSO", "patologia": "Sospetto Infarto (IMA)", "necessita_msa": True},
-    {"sintomi": "Ragazzo caduto da moto, cosciente, dolore lancinante alla gamba destra con deformità.", "codice_reale": "GIALLO", "patologia": "Trauma Arto Inferiore", "necessita_msa": False},
-    {"sintomi": "Bambino di 4 anni con febbre a 39.5 e convulsioni in atto, i genitori sono nel panico.", "codice_reale": "ROSSO", "patologia": "Convulsione Febbrile", "necessita_msa": True},
-    {"sintomi": "Anziana scivolata in casa, impossibilitata ad alzarsi, riferisce lieve dolore all'anca.", "codice_reale": "VERDE", "patologia": "Caduta in casa", "necessita_msa": False},
-    {"sintomi": "Paziente trovato a terra incosciente, respiro agonico (gasping). Chiamante esegue massaggio.", "codice_reale": "ROSSO", "patologia": "Arresto Cardiaco", "necessita_msa": True}
+# Database degli scenari clinici variegati
+SCENARI_CLINICI = [
+    {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "tipo": "Cardiologico", "necessita_msa": True},
+    {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
+    {"sintomi": "Sospetto ICTUS (Stroke) - Emisindrome e afasia", "codice": "ROSSO", "tipo": "Neurologico", "necessita_msa": True},
+    {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
+    {"sintomi": "Infortunio sul Lavoro - Caduta dall'alto / Schiacciamento", "codice": "ROSSO", "tipo": "Traumatologico", "necessita_msa": True},
+    {"sintomi": "Ostruzione vie aeree da corpo estraneo (PEDIATRICO)", "codice": "ROSSO", "tipo": "Pediatrico", "necessita_msa": True},
+    {"sintomi": "Caduta in falesia / Sentiero - Trauma cranico e spinale", "codice": "ROSSO", "tipo": "Montagna", "necessita_msa": True},
+    {"sintomi": "Crisi Epilettica in atto - Incosciente", "codice": "GIALLO", "tipo": "Neurologico", "necessita_msa": False},
+    {"sintomi": "Dolore addominale acuto - Sospetta appendicite / Addome acuto", "codice": "GIALLO", "tipo": "Addominale", "necessita_msa": False},
+    {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "tipo": "Traumatologico", "necessita_msa": False},
+    {"sintomi": "Dispnea in paziente asmatico - Buoni parametri", "codice": "GIALLO", "tipo": "Pneumologico", "necessita_msa": False},
+    {"sintomi": "Stato di ebbrezza e ferita lacero contusa", "codice": "VERDE", "tipo": "Sociale/Etilista", "necessita_msa": False},
+    {"sintomi": "Paziente anziano con febbre alta e astenia", "codice": "VERDE", "tipo": "Medico", "necessita_msa": False},
+    {"sintomi": "Lieve trauma distorsivo caviglia", "codice": "VERDE", "tipo": "Traumatologico", "necessita_msa": False}
 ]
 
 tempo_base = 120
