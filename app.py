@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. GESTIONE DATABASE E STATO INIZIALE
+# 1. GESTIONE DATABASE E STATO
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
@@ -26,131 +26,86 @@ def init_db():
     conn.commit()
     conn.close()
 
-def get_utente_db(username):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("SELECT username, password, cambio_obbligatorio, ruolo FROM utenti WHERE username=?", (username,))
-    res = c.fetchone()
-    conn.close()
-    return res
-
-def aggiorna_password_db(username, nuova_pw):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
-    conn.commit()
-    conn.close()
-
-# Inizializzazione DB
 init_db()
 
 # Configurazione Pagina
-st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
 
-# Inizializzazione variabili di sessione (PROTEZIONE CRASH)
+# Inizializzazione Session State per evitare errori di variabili mancanti
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
-if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
-if 'ruolo' not in st.session_state: st.session_state.ruolo = None
-if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
-if 'evento_corrente' not in st.session_state: st.session_state.evento_corrente = None
-if 'last_mission_time' not in st.session_state: st.session_state.last_mission_time = time.time()
-if 'registro_radio' not in st.session_state: st.session_state.registro_radio = []
-if 'notifiche_centrale' not in st.session_state: st.session_state.notifiche_centrale = []
-if 'missioni' not in st.session_state: st.session_state.missioni = {}
-if 'mezzo_selezionato' not in st.session_state: st.session_state.mezzo_selezionato = None
+if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
 
 # =========================================================
-# 2. LOGIN E SICUREZZA
+# 2. LOGIN
 # =========================================================
 if st.session_state.utente_connesso is None:
     st.title("🔐 SOREU Alpina - Login")
-    if st.session_state.fase_cambio_pw:
-        st.warning(f"⚠️ Primo accesso per {st.session_state.temp_user}: Imposta una nuova password.")
-        n_p = st.text_input("Nuova Password", type="password")
-        c_p = st.text_input("Conferma Password", type="password")
-        if st.button("SALVA E ACCEDI"):
-            if n_p == c_p and len(n_p) >= 4:
-                aggiorna_password_db(st.session_state.temp_user, n_p)
-                st.session_state.utente_connesso = st.session_state.temp_user
-                st.rerun()
-            else: st.error("Errore nelle password (minimo 4 caratteri).")
-    else:
-        u_in = st.text_input("Username").lower().strip()
-        p_in = st.text_input("Password", type="password")
-        if st.button("ACCEDI", type="primary"):
-            user_data = get_utente_db(u_in)
-            if user_data and user_data[1] == p_in:
-                if user_data[2] == 1:
-                    st.session_state.fase_cambio_pw = True
-                    st.session_state.temp_user = u_in
-                    st.rerun()
-                else:
-                    st.session_state.utente_connesso = u_in
-                    st.rerun()
-            else: st.error("ID o Password errati.")
+    u_in = st.text_input("Username").lower().strip()
+    p_in = st.text_input("Password", type="password")
+    if st.button("ACCEDI", type="primary"):
+        conn = sqlite3.connect('centrale.db')
+        c = conn.cursor()
+        c.execute("SELECT password FROM utenti WHERE username=?", (u_in,))
+        res = c.fetchone()
+        conn.close()
+        if res and res[0] == p_in:
+            st.session_state.utente_connesso = u_in
+            st.rerun()
+        else:
+            st.error("Credenziali errate")
     st.stop()
 
 # =========================================================
-# 3. GESTIONE UTENTI (SOLO ADMIN)
-# =========================================================
-def interfaccia_admin_gestione():
-    st.markdown("### 🛠️ Gestione Accessi Operatori")
-    conn = sqlite3.connect('centrale.db')
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("**Aggiungi nuovo account**")
-        nuovo_u = st.text_input("Username (es: nome.cognome)", key="add_u").lower().strip()
-        nuova_p = st.text_input("Password provvisoria", type="password", key="add_p")
-        if st.button("Registra Operatore"):
-            if nuovo_u and nuova_p:
-                try:
-                    c = conn.cursor()
-                    c.execute("INSERT INTO utenti VALUES (?,?,1,'Operatore')", (nuovo_u, nuova_p))
-                    conn.commit()
-                    st.success(f"Utente {nuovo_u} creato!")
-                    st.rerun()
-                except: st.error("L'utente esiste già.")
-    
-    with col2:
-        st.write("**Rimuovi account esistente**")
-        df_u = pd.read_sql_query("SELECT username FROM utenti WHERE username != 'admin'", conn)
-        utente_del = st.selectbox("Seleziona utente da eliminare", df_u['username'].tolist() if not df_u.empty else ["Nessun utente"])
-        if st.button("Elimina Definitivamente", type="primary"):
-            if utente_del and utente_del != "Nessun utente":
-                c = conn.cursor()
-                c.execute("DELETE FROM utenti WHERE username=?", (utente_del,))
-                conn.commit()
-                st.success("Utente rimosso.")
-                st.rerun()
-    conn.close()
-
-# =========================================================
-# 4. SELEZIONE POSTAZIONE
+# 3. SELEZIONE POSTAZIONE + GESTIONE ADMIN
 # =========================================================
 if st.session_state.scrivania_selezionata is None:
     st.title(f"Benvenuto, {st.session_state.utente_connesso.upper()}")
-    
-    # Se è admin, mostra il pannello di gestione prima delle scrivanie
+
+    # --- PANNELLO GESTIONE UTENTI (Solo per Admin) ---
     if st.session_state.utente_connesso == 'admin':
-        with st.expander("⚙️ PANNELLO GESTIONE ACCOUNT"):
-            interfaccia_admin_gestione()
+        with st.expander("🛠️ GESTIONE ACCOUNT OPERATORI"):
+            col1, col2 = st.columns(2)
+            conn = sqlite3.connect('centrale.db')
+            
+            with col1:
+                st.write("**Aggiungi Operatore**")
+                new_u = st.text_input("Username", key="new_u").lower().strip()
+                new_p = st.text_input("Password", type="password", key="new_p")
+                if st.button("Salva Nuovo Utente"):
+                    if new_u and new_p:
+                        try:
+                            c = conn.cursor()
+                            c.execute("INSERT INTO utenti VALUES (?,?,1,'Operatore')", (new_u, new_p))
+                            conn.commit()
+                            st.success(f"Utente {new_u} creato!")
+                            st.rerun()
+                        except: st.error("Errore: esiste già.")
+            
+            with col2:
+                st.write("**Elimina Operatore**")
+                df_u = pd.read_sql_query("SELECT username FROM utenti WHERE username != 'admin'", conn)
+                u_to_del = st.selectbox("Seleziona utente", df_u['username'].tolist() if not df_u.empty else ["-"])
+                if st.button("Elimina Account", type="primary"):
+                    if u_to_del != "-":
+                        c = conn.cursor()
+                        c.execute("DELETE FROM utenti WHERE username=?", (u_to_del,))
+                        conn.commit()
+                        st.success("Eliminato!")
+                        st.rerun()
+            conn.close()
+
+    st.divider()
+    st.subheader("🖥️ Seleziona la tua Scrivania")
     
-    st.subheader("🖥️ Seleziona Postazione Operativa")
     cols = st.columns(3)
     for i in range(1, 10):
         with cols[(i-1)%3]:
-            nome_desk = "SALA OPERATIVA - ADMIN" if st.session_state.utente_connesso == "admin" else f"SALA OPERATIVA - DESK {i}"
-            if st.button(f"🖥️ {nome_desk}", use_container_width=True):
-                st.session_state.scrivania_selezionata = nome_desk
-                st.session_state.ruolo = "centrale"
+            # Risoluzione BUG: usiamo 'key' unico per ogni bottone
+            label = "SALA - ADMIN" if st.session_state.utente_connesso == 'admin' else f"SALA - DESK {i}"
+            if st.button(f"🖥️ {label}", key=f"btn_desk_{i}", use_container_width=True):
+                st.session_state.scrivania_selezionata = label
                 st.rerun()
-    st.divider()
-    if st.button("🚑 ACCEDI COME EQUIPAGGIO MEZZO", use_container_width=True):
-        st.session_state.scrivania_selezionata = "EQUIPAGGIO"; st.session_state.ruolo = "mezzo"; st.rerun()
-    st.stop()
-
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
 # =========================================================
