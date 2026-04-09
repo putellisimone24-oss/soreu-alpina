@@ -106,12 +106,7 @@ with tab_mezzi:
         for m, d in st.session_state.database_mezzi.items():
             st.write(f"**{m}**: {d['stato']}")
 with tab_risorse:
-    st.header("🚑 Stato Risorse Territoriali")
-    
-    # Elenco mezzi semplice (Per tutti)
-    if 'database_mezzi' in st.session_state:
-        for m, d in st.session_state.database_mezzi.items():
-            st.write(f"**{m}**: {d['stato']}")
+
 
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
     if st.session_state.ruolo == "Admin":
