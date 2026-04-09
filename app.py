@@ -94,16 +94,15 @@ def riproduci_suono_notifica():
     audio_url = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
     sound_html = f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>'
     st.components.v1.html(sound_html, height=0, width=0)
-
 # =========================================================
-# DATABASE MEZZI AGGIORNATO - SOREU ALPINA
+# DATABASE MEZZI AGGIORNATO (BG + BS) - CORRETTO
 # =========================================================
 if 'database_mezzi' not in st.session_state:
     st.session_state.database_mezzi = {
-        # --- MEZZI AVANZATI (MSA 1, MSA 2, ELI) ---
+        # --- MEZZI BERGAMO (Soreu Alpina) ---
         "MSA 2 TREVIGLIO": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Automedica - P.le Luigi Meneguzzo, Treviglio", "lat": 45.5185, "lon": 9.5998
+            "sede": "Automedica Treviglio", "lat": 45.5185, "lon": 9.5998
         },
         "MSA 2 BERGAMO": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
@@ -121,11 +120,9 @@ if 'database_mezzi' not in st.session_state:
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
             "sede": "Base Elisoccorso Bergamo", "lat": 45.6710, "lon": 9.7020
         },
-
-        # --- MEZZI BASE (MSB - ASSOCIAZIONI) ---
         "CRITRE_124.C": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Treviglio - Via Abate Crippa", "lat": 45.5242, "lon": 9.5912
+            "sede": "CRI Treviglio", "lat": 45.5242, "lon": 9.5912
         },
         "CRITRE_135.C": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
@@ -154,47 +151,39 @@ if 'database_mezzi' not in st.session_state:
         "VOLONTARI_TREVIOLO": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
             "sede": "Volontari Treviolo", "lat": 45.6730, "lon": 9.6100
-        }
+        },
 
-    # --- NUOVA AREA BRESCIA (Soreu Valpadana) ---
+        # --- MEZZI BRESCIA (Soreu Valpadana) ---
         "MSA 2 BRESCIA 1": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Automedica Spedali Civili BS", "lat": 45.5510, "lon": 10.2280
+            "sede": "Spedali Civili BS", "lat": 45.5510, "lon": 10.2280
         },
         "MSA 2 DESENZANO": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Automedica Ospedale Desenzano", "lat": 45.4740, "lon": 10.5120
+            "sede": "Ospedale Desenzano", "lat": 45.4740, "lon": 10.5120
         },
         "MSA 1 MANERBIO": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Manerbio (Infermiere)", "lat": 45.3580, "lon": 10.1350
+            "sede": "CRI Manerbio", "lat": 45.3580, "lon": 10.1350
         },
         "ELI BRESCIA": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
-            "sede": "Base Elisoccorso Brescia", "lat": 45.5680, "lon": 10.2350
+            "sede": "Base Brescia", "lat": 45.5680, "lon": 10.2350
         },
         "CRIBRE_301.C": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Brescia - Via Berardo Maggi", "lat": 45.5350, "lon": 10.2150
+            "sede": "CRI Brescia", "lat": 45.5350, "lon": 10.2150
         },
         "GARDA_01": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Volontari del Garda - Salò", "lat": 45.6020, "lon": 10.5150
-        },
-        "CROCE_GALLO_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Gialla Brescia", "lat": 45.5120, "lon": 10.2520
+            "sede": "Volontari del Garda", "lat": 45.6020, "lon": 10.5150
         },
         "CAMONICA_01": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Arnica Berzo Inferiore", "lat": 45.8850, "lon": 10.1820
-        },
-        "CRI_PALAZZOLO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Palazzolo sull'Oglio", "lat": 45.5980, "lon": 9.8850
+            "sede": "Arnica Berzo Inf.", "lat": 45.8850, "lon": 10.1820
         }
     }
-
+    
 # 2. DATABASE OSPEDALI REALI
 if 'database_ospedali' not in st.session_state:
     st.session_state.database_ospedali = {
