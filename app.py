@@ -323,65 +323,26 @@ def aggiorna_stati_automatici():
 if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
     aggiorna_stati_automatici()
 
-def genera_missione_casuale():
-    """Genera missioni variegate e realistiche per SOREU Alpina"""
-    
-    # Database di indirizzi reali per aumentare il realismo
-    database_indirizzi = [
-        {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS"},
-        {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss"},
-        {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio"},
-        {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)"},
-        {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Centro Commerciale Le Due Torri"},
-        {"comune": "Seriate", "via": "Via Paderno", "target": "Ospedale Bolognini"},
-        {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio-Caravaggio"},
-        {"comune": "Castione della Presolana", "via": "Via Passo della Presolana", "target": "Rifugio Alpino"},
-        {"comune": "Zogno", "via": "Via Martiri della Libertà", "target": "Centro Scolastico"},
-        {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico"},
-        {"comune": "Romano di Lombardia", "via": "Via Albarotto", "target": "Zona Industriale"},
-        {"comune": "San Pellegrino Terme", "via": "Viale della Vittoria", "target": "QC Terme"},
-        {"comune": "Clusone", "via": "Via Roma", "target": "Piazza dell'Orologio"}
-    ]
+for v in voci_da_rimuovere: del st.session_state.missioni[v]
 
-    # Tipologie di scenari clinici avanzati
-    scenari = [
-        {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "tipo": "Cardiologico"},
-        {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "tipo": "Rianimatorio"},
-        {"sintomi": "Sospetto ICTUS (Stroke) - Deviazione rima buccale", "codice": "ROSSO", "tipo": "Neurologico"},
-        {"sintomi": "Incidente Stradale Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Infortunio sul Lavoro - Amputazione traumatica", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Investimento Pedone - Incosciente", "codice": "ROSSO", "tipo": "Traumatologico"},
-        {"sintomi": "Caduta in falesia - Trauma cranico e spinale", "codice": "ROSSO", "tipo": "Montagna"},
-        {"sintomi": "Ostruzione vie aeree (PEDIATRICO)", "codice": "ROSSO", "tipo": "Pediatrico"},
-        {"sintomi": "Crisi respiratoria grave - Edema Polmonare", "codice": "ROSSO", "tipo": "Pneumologico"},
-        {"sintomi": "Crisi Epilettica in atto", "codice": "GIALLO", "tipo": "Neurologico"},
-        {"sintomi": "Dolore addominale acuto - Sospetta appendicite", "codice": "GIALLO", "tipo": "Addominale"},
-        {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "tipo": "Traumatologico"},
-        {"sintomi": "Stato di ebbrezza e ferita lacero contusa", "codice": "VERDE", "tipo": "Sociale/Etilista"},
-        {"sintomi": "Paziente con febbre e astenia", "codice": "VERDE", "tipo": "Medico"}
-    ]
+if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
+    aggiorna_stati_automatici()
 
-    # Selezione casuale dell'indirizzo e dello scenario
-    indirizzo = random.choice(database_indirizzi)
-    scelta = random.choice(scenari)
+# DATABASE EVENTI CLINICI
+database_indirizzi = [
+    {"comune": "Bergamo", "via": "Via della Croce Rossa 2", "lat": 45.6928, "lon": 9.6428},
+    {"comune": "Bergamo", "via": "Piazza Vecchia", "lat": 45.7042, "lon": 9.6622},
+    {"comune": "Treviglio", "via": "Via Roma 12", "lat": 45.5268, "lon": 9.5925},
+    {"comune": "Caravaggio", "via": "Piazza del Santuario 1", "lat": 45.5000, "lon": 9.6410},
+    {"comune": "Dalmine", "via": "Via Guzzanica 5", "lat": 45.6470, "lon": 9.6100},
+]
 
-    # Creazione dell'evento corrente nel Session State
-    st.session_state.evento_corrente = {
-        "comune": indirizzo["comune"],
-        "via": f"{indirizzo['via']}, {random.randint(1, 100)}",
-        "target": indirizzo["target"],
-        "codice": scelta["codice"],
-        "sintomi": scelta["sintomi"],
-        "tipo_clinico": scelta["tipo"],
-        "ora_chiamata": datetime.now().strftime("%H:%M:%S")
-    }
-
-    st.session_state.last_mission_time = time.time()
-    st.session_state.suono_riprodotto = False
-    
-    # Feedback visivo
-    st.toast(f"🚨 NUOVA CHIAMATA: {scelta['codice']} a {indirizzo['comune']} ({indirizzo['target']})", icon="☎️")
-    
+scenari_clinici = [
+    {"sintomi": "Uomo 60 anni, dolore forte retrosternale che irradia al braccio sinistro da 20 minuti.", "codice_reale": "ROSSO", "patologia": "Sospetto Infarto (IMA)", "necessita_msa": True},
+    {"sintomi": "Ragazzo caduto da moto, cosciente, dolore lancinante alla gamba destra con deformità.", "codice_reale": "GIALLO", "patologia": "Trauma Arto Inferiore", "necessita_msa": False},
+    {"sintomi": "Bambino di 4 anni con febbre a 39.5 e convulsioni in atto, i genitori sono nel panico.", "codice_reale": "ROSSO", "patologia": "Convulsione Febbrile", "necessita_msa": True},
+    {"sintomi": "Anziana scivolata in casa, impossibilitata ad alzarsi, riferisce lieve dolore all'anca.", "codice_reale": "VERDE", "patologia": "Caduta in casa", "necessita_msa": False},
+    {"sintomi": "Paziente trovato a terra incosciente, respiro agonico (gasping). Chiamante esegue massaggio.", "codice_reale": "ROSSO", "patologia": "Arresto Cardiaco", "necessita_msa": True}
 
 tempo_base = 120
 tempo_necessario = tempo_base / st.session_state.time_mult
