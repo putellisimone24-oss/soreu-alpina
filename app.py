@@ -20,12 +20,37 @@ def init_db():
         utenti_iniziali = [
             ('admin', 'admin', 0, 'Admin'),
             ('simone.putelli', 'simone', 1, 'Operatore'),
-            ('simone.marinoni', 'simone', 1, 'Operatore')
+            ('simone.marinoni', 'simone', 1, 'Operatore'),
             ('andrea.giuliano', 'andrea', 1, 'Operatore')
         ]
         c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
     conn.commit()
     conn.close()
+
+def get_tutti_utenti():
+    conn = sqlite3.connect('centrale.db')
+    df = pd.read_sql_query("SELECT username, ruolo, cambio_obbligatorio FROM utenti", conn)
+    conn.close()
+    return df
+
+def aggiungi_utente(u, p, r):
+    try:
+        conn = sqlite3.connect('centrale.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO utenti VALUES (?,?,1,?)", (u.lower().strip(), p, r))
+        conn.commit()
+        conn.close()
+        return True
+    except: return False
+
+def elimina_utente(u):
+    if u == 'admin': return False
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM utenti WHERE username=?", (u,))
+    conn.commit()
+    conn.close()
+    return True
 
 def get_utente_db(username):
     conn = sqlite3.connect('centrale.db')
@@ -41,8 +66,6 @@ def aggiorna_password_db(username, nuova_pw):
     c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
     conn.commit()
     conn.close()
-
-init_db()
 
 # =========================================================
 # 2. SCHERMATA LOGIN (PRIMA DI TUTTO IL RESTO)
