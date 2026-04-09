@@ -7,6 +7,27 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
+# 1. INIZIALIZZAZIONE OBBLIGATORIA (RISOLVE ATTRIBUTEERROR)
+# =========================================================
+# Questo blocco DEVE essere la prima cosa dopo st.set_page_config
+st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
+
+# Definiamo tutte le variabili di stato subito
+if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
+if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
+if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
+if 'ruolo' not in st.session_state: st.session_state.ruolo = None
+if 'mezzo_selezionato' not in st.session_state: st.session_state.mezzo_selezionato = None
+if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
+if 'evento_corrente' not in st.session_state: st.session_state.evento_corrente = None
+if 'last_mission_time' not in st.session_state: st.session_state.last_mission_time = time.time()
+if 'auto_mission_active' not in st.session_state: st.session_state.auto_mission_active = False
+if 'freq_missioni' not in st.session_state: st.session_state.freq_missioni = 60
+if 'missioni' not in st.session_state: st.session_state.missioni = {}
+if 'registro_radio' not in st.session_state: st.session_state.registro_radio = []
+if 'suono_riprodotto' not in st.session_state: st.session_state.suono_riprodotto = False
+
+# =========================================================
 # 2. GESTIONE DATABASE (SQLITE)
 # =========================================================
 def init_db():
