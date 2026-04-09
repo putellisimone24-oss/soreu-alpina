@@ -323,22 +323,66 @@ def aggiorna_stati_automatici():
 if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
     aggiorna_stati_automatici()
 
-# DATABASE EVENTI CLINICI
-database_indirizzi = [
-    {"comune": "Bergamo", "via": "Via della Croce Rossa 2", "lat": 45.6928, "lon": 9.6428},
-    {"comune": "Bergamo", "via": "Piazza Vecchia", "lat": 45.7042, "lon": 9.6622},
-    {"comune": "Treviglio", "via": "Via Roma 12", "lat": 45.5268, "lon": 9.5925},
-    {"comune": "Caravaggio", "via": "Piazza del Santuario 1", "lat": 45.5000, "lon": 9.6410},
-    {"comune": "Dalmine", "via": "Via Guzzanica 5", "lat": 45.6470, "lon": 9.6100},
-]
-
-scenari_clinici = [
-    {"sintomi": "Uomo 60 anni, dolore forte retrosternale che irradia al braccio sinistro da 20 minuti.", "codice_reale": "ROSSO", "patologia": "Sospetto Infarto (IMA)", "necessita_msa": True},
-    {"sintomi": "Ragazzo caduto da moto, cosciente, dolore lancinante alla gamba destra con deformità.", "codice_reale": "GIALLO", "patologia": "Trauma Arto Inferiore", "necessita_msa": False},
-    {"sintomi": "Bambino di 4 anni con febbre a 39.5 e convulsioni in atto, i genitori sono nel panico.", "codice_reale": "ROSSO", "patologia": "Convulsione Febbrile", "necessita_msa": True},
-    {"sintomi": "Anziana scivolata in casa, impossibilitata ad alzarsi, riferisce lieve dolore all'anca.", "codice_reale": "VERDE", "patologia": "Caduta in casa", "necessita_msa": False},
-    {"sintomi": "Paziente trovato a terra incosciente, respiro agonico (gasping). Chiamante esegue massaggio.", "codice_reale": "ROSSO", "patologia": "Arresto Cardiaco", "necessita_msa": True}
-]
+def genera_missione_casuale():
+    """Genera missioni variegate e realistiche per SOREU Alpina"""
+    
+    # Elenco Comuni della provincia di Bergamo
+    comuni = [
+        "Bergamo", "Seriate", "Dalmine", "Treviglio", "Zogno", "Clusone", 
+        "Lovere", "Sarnico", "Alzano Lombardo", "San Pellegrino Terme", 
+        "Ponte San Pietro", "Romano di Lombardia", "Castione della Presolana"
+    ]
+    
+    # Tipologie di scenari molto più dettagliati
+    scenari = [
+        # --- EMERGENZE CARDIO-CIRCOLATORIE ---
+        {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "target": "Abitazione privata"},
+        {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "target": "Luogo pubblico"},
+        {"sintomi": "Crisi Ipertensiva con forte cefalea", "codice": "GIALLO", "target": "Abitazione privata"},
+        
+        # --- EMERGENZE NEUROLOGICHE ---
+        {"sintomi": "Sospetto ICTUS (Stroke) - Emisindrome e afasia", "codice": "ROSSO", "target": "Abitazione privata"},
+        {"sintomi": "Crisi Epilettica generalizzata (Grand Male)", "codice": "GIALLO", "target": "Scuola"},
+        {"sintomi": "Paziente in stato confusionale / Disorientato", "codice": "VERDE", "target": "Strada pubblica"},
+        
+        # --- TRAUMATOLOGIA E INCIDENTI ---
+        {"sintomi": "Incidente Stradale Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "target": "Tratto Extraurbano / Autostrada"},
+        {"sintomi": "Investimento Pedone - Trauma cranico commotivo", "codice": "ROSSO", "target": "Centro Urbano"},
+        {"sintomi": "Infortunio sul Lavoro - Caduta dall'alto (3 metri)", "codice": "ROSSO", "target": "Cantiere / Fabbrica"},
+        {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "target": "RSA / Casa di Riposo"},
+        
+        # --- MONTAGNA E TERRITORIO (Tipico Alpina) ---
+        {"sintomi": "Caduta in falesia - Trauma arti inferiori", "codice": "ROSSO", "target": "Sentiero / Parete Rocciosa"},
+        {"sintomi": "Escursionista colto da malore - Possibile ipotermia", "codice": "GIALLO", "target": "Rifugio Alpino"},
+        {"sintomi": "Puntura di imenottero (Ape/Vespa) - Reazione allergica", "codice": "ROSSO", "target": "Zona Boschiva"},
+        
+        # --- PEDIATRICI ---
+        {"sintomi": "Ostruzione vie aeree da corpo estraneo (Pediatrico)", "codice": "ROSSO", "target": "Asilo Nido"},
+        {"sintomi": "Convulsione febbrile in bambino di 2 anni", "codice": "GIALLO", "target": "Abitazione privata"},
+        
+        # --- ALTRO ---
+        {"sintomi": "Intossicazione Etilica acuta - Paziente aggressivo", "codice": "GIALLO", "target": "Discoteca / Locale"},
+        {"sintomi": "Tentato Suicidio - Ingestione farmaci", "codice": "ROSSO", "target": "Abitazione privata"},
+        {"sintomi": "Dispnea grave - Edema Polmonare acuto", "codice": "ROSSO", "target": "Abitazione privata"}
+    ]
+    
+    scelta = random.choice(scenari)
+    vie = ["Via Roma", "Viale Italia", "Piazza del Mercato", "Via XXV Aprile", "Corso Milano", "Via delle Orobie"]
+    
+    st.session_state.evento_corrente = {
+        "comune": random.choice(comuni),
+        "via": f"{random.choice(vie)}, {random.randint(1, 150)}",
+        "codice": scelta["codice"],
+        "sintomi": scelta["sintomi"],
+        "target": scelta["target"],
+        "ora_chiamata": datetime.now().strftime("%H:%M:%S")
+    }
+    
+    st.session_state.last_mission_time = time.time()
+    st.session_state.suono_riprodotto = False
+    
+    # Notifica visiva più professionale
+    st.toast(f"🚨 NUOVA CHIAMATA NUE 112: {scelta['codice']} - {scelta['target']}", icon="☎️")
 
 tempo_base = 120
 tempo_necessario = tempo_base / st.session_state.time_mult
