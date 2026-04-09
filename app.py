@@ -326,63 +326,62 @@ if st.session_state.auto_mode and st.session_state.missioni and st.session_state
 def genera_missione_casuale():
     """Genera missioni variegate e realistiche per SOREU Alpina"""
     
-    # Elenco Comuni della provincia di Bergamo
-    comuni = [
-        "Bergamo", "Seriate", "Dalmine", "Treviglio", "Zogno", "Clusone", 
-        "Lovere", "Sarnico", "Alzano Lombardo", "San Pellegrino Terme", 
-        "Ponte San Pietro", "Romano di Lombardia", "Castione della Presolana"
+    # Database di indirizzi reali per aumentare il realismo
+    database_indirizzi = [
+        {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS"},
+        {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss"},
+        {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio"},
+        {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)"},
+        {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "Centro Commerciale Le Due Torri"},
+        {"comune": "Seriate", "via": "Via Paderno", "target": "Ospedale Bolognini"},
+        {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Ospedale Treviglio-Caravaggio"},
+        {"comune": "Castione della Presolana", "via": "Via Passo della Presolana", "target": "Rifugio Alpino"},
+        {"comune": "Zogno", "via": "Via Martiri della Libertà", "target": "Centro Scolastico"},
+        {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico"},
+        {"comune": "Romano di Lombardia", "via": "Via Albarotto", "target": "Zona Industriale"},
+        {"comune": "San Pellegrino Terme", "via": "Viale della Vittoria", "target": "QC Terme"},
+        {"comune": "Clusone", "via": "Via Roma", "target": "Piazza dell'Orologio"}
     ]
-    
-    # Tipologie di scenari molto più dettagliati
+
+    # Tipologie di scenari clinici avanzati
     scenari = [
-        # --- EMERGENZE CARDIO-CIRCOLATORIE ---
-        {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "target": "Abitazione privata"},
-        {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "target": "Luogo pubblico"},
-        {"sintomi": "Crisi Ipertensiva con forte cefalea", "codice": "GIALLO", "target": "Abitazione privata"},
-        
-        # --- EMERGENZE NEUROLOGICHE ---
-        {"sintomi": "Sospetto ICTUS (Stroke) - Emisindrome e afasia", "codice": "ROSSO", "target": "Abitazione privata"},
-        {"sintomi": "Crisi Epilettica generalizzata (Grand Male)", "codice": "GIALLO", "target": "Scuola"},
-        {"sintomi": "Paziente in stato confusionale / Disorientato", "codice": "VERDE", "target": "Strada pubblica"},
-        
-        # --- TRAUMATOLOGIA E INCIDENTI ---
-        {"sintomi": "Incidente Stradale Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "target": "Tratto Extraurbano / Autostrada"},
-        {"sintomi": "Investimento Pedone - Trauma cranico commotivo", "codice": "ROSSO", "target": "Centro Urbano"},
-        {"sintomi": "Infortunio sul Lavoro - Caduta dall'alto (3 metri)", "codice": "ROSSO", "target": "Cantiere / Fabbrica"},
-        {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "target": "RSA / Casa di Riposo"},
-        
-        # --- MONTAGNA E TERRITORIO (Tipico Alpina) ---
-        {"sintomi": "Caduta in falesia - Trauma arti inferiori", "codice": "ROSSO", "target": "Sentiero / Parete Rocciosa"},
-        {"sintomi": "Escursionista colto da malore - Possibile ipotermia", "codice": "GIALLO", "target": "Rifugio Alpino"},
-        {"sintomi": "Puntura di imenottero (Ape/Vespa) - Reazione allergica", "codice": "ROSSO", "target": "Zona Boschiva"},
-        
-        # --- PEDIATRICI ---
-        {"sintomi": "Ostruzione vie aeree da corpo estraneo (Pediatrico)", "codice": "ROSSO", "target": "Asilo Nido"},
-        {"sintomi": "Convulsione febbrile in bambino di 2 anni", "codice": "GIALLO", "target": "Abitazione privata"},
-        
-        # --- ALTRO ---
-        {"sintomi": "Intossicazione Etilica acuta - Paziente aggressivo", "codice": "GIALLO", "target": "Discoteca / Locale"},
-        {"sintomi": "Tentato Suicidio - Ingestione farmaci", "codice": "ROSSO", "target": "Abitazione privata"},
-        {"sintomi": "Dispnea grave - Edema Polmonare acuto", "codice": "ROSSO", "target": "Abitazione privata"}
+        {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico irradiato", "codice": "ROSSO", "tipo": "Cardiologico"},
+        {"sintomi": "Arresto Cardio-Respiratorio (ACR) - Manovre in corso", "codice": "ROSSO", "tipo": "Rianimatorio"},
+        {"sintomi": "Sospetto ICTUS (Stroke) - Deviazione rima buccale", "codice": "ROSSO", "tipo": "Neurologico"},
+        {"sintomi": "Incidente Stradale Auto-Moto - Dinamica Maggiore", "codice": "ROSSO", "tipo": "Traumatologico"},
+        {"sintomi": "Infortunio sul Lavoro - Amputazione traumatica", "codice": "ROSSO", "tipo": "Traumatologico"},
+        {"sintomi": "Investimento Pedone - Incosciente", "codice": "ROSSO", "tipo": "Traumatologico"},
+        {"sintomi": "Caduta in falesia - Trauma cranico e spinale", "codice": "ROSSO", "tipo": "Montagna"},
+        {"sintomi": "Ostruzione vie aeree (PEDIATRICO)", "codice": "ROSSO", "tipo": "Pediatrico"},
+        {"sintomi": "Crisi respiratoria grave - Edema Polmonare", "codice": "ROSSO", "tipo": "Pneumologico"},
+        {"sintomi": "Crisi Epilettica in atto", "codice": "GIALLO", "tipo": "Neurologico"},
+        {"sintomi": "Dolore addominale acuto - Sospetta appendicite", "codice": "GIALLO", "tipo": "Addominale"},
+        {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice": "GIALLO", "tipo": "Traumatologico"},
+        {"sintomi": "Stato di ebbrezza e ferita lacero contusa", "codice": "VERDE", "tipo": "Sociale/Etilista"},
+        {"sintomi": "Paziente con febbre e astenia", "codice": "VERDE", "tipo": "Medico"}
     ]
-    
+
+    # Selezione casuale dell'indirizzo e dello scenario
+    indirizzo = random.choice(database_indirizzi)
     scelta = random.choice(scenari)
-    vie = ["Via Roma", "Viale Italia", "Piazza del Mercato", "Via XXV Aprile", "Corso Milano", "Via delle Orobie"]
-    
+
+    # Creazione dell'evento corrente nel Session State
     st.session_state.evento_corrente = {
-        "comune": random.choice(comuni),
-        "via": f"{random.choice(vie)}, {random.randint(1, 150)}",
+        "comune": indirizzo["comune"],
+        "via": f"{indirizzo['via']}, {random.randint(1, 100)}",
+        "target": indirizzo["target"],
         "codice": scelta["codice"],
         "sintomi": scelta["sintomi"],
-        "target": scelta["target"],
+        "tipo_clinico": scelta["tipo"],
         "ora_chiamata": datetime.now().strftime("%H:%M:%S")
     }
-    
+
     st.session_state.last_mission_time = time.time()
     st.session_state.suono_riprodotto = False
     
-    # Notifica visiva più professionale
-    st.toast(f"🚨 NUOVA CHIAMATA NUE 112: {scelta['codice']} - {scelta['target']}", icon="☎️")
+    # Feedback visivo
+    st.toast(f"🚨 NUOVA CHIAMATA: {scelta['codice']} a {indirizzo['comune']} ({indirizzo['target']})", icon="☎️")
+    
 
 tempo_base = 120
 tempo_necessario = tempo_base / st.session_state.time_mult
