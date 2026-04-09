@@ -613,7 +613,7 @@ if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and m
                                 st.session_state.evento_corrente = None
                                 st.rerun()
     
-         with col_mappa:
+    with col_mappa:
                 st.header("🗺️ Mappa Area Alpina")
                 punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
                 if st.session_state.evento_corrente:
