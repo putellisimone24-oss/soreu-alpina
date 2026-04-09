@@ -90,7 +90,6 @@ if st.session_state.utente_connesso is None:
 # =========================================================
 tab_centrale, tab_mezzi, tab_risorse = st.tabs([
     "🖥️ Centrale Operativa", 
-    "🚑 Gestione Mezzi", 
     "👥 Risorse e Account"
 ])
 
