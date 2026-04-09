@@ -99,7 +99,7 @@ if st.session_state.utente_connesso is None:
 
         
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
-    if st.session_state.ruolo == "Admin":
+if st.session_state.ruolo == "Admin":
         st.divider()
         st.subheader("👥 Gestione Account Operatori")
         
