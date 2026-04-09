@@ -299,35 +299,38 @@ def aggiorna_stati_automatici():
 
 if st.session_state.auto_mode and st.session_state.missioni and st.session_state.turno_iniziato:
     aggiorna_stati_automatici()
+# =========================================================
+# 1. DATABASE GLOBALI (BG + BS) - SISTEMATI E ALLINEATI
+# =========================================================
 
-# DATABASE EVENTI CLINICI
-    database_indirizzi = [
-        {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
-        {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
-        {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
-        {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine (Fabbrica)", "lat": 45.648, "lon": 9.602},
-        {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
-        {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
-        {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero", "lat": 45.912, "lon": 10.081},
-        {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
-        {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
-        {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071},
-        {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
-        {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
-        {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
-        {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
-        {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto G. D'Annunzio", "lat": 45.428, "lon": 10.330},
-        {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
-        {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
-        {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
-    ]
+DATABASE_INDIRIZZI = [
+    # --- AREA BERGAMO ---
+    {"comune": "Bergamo", "via": "Via Papa Giovanni XXIII", "target": "Stazione FS", "lat": 45.691, "lon": 9.675},
+    {"comune": "Bergamo", "via": "Via Baioni", "target": "Stadio Gewiss", "lat": 45.709, "lon": 9.681},
+    {"comune": "Orio al Serio", "via": "Via Aeroporto", "target": "Aeroporto Il Caravaggio", "lat": 45.666, "lon": 9.700},
+    {"comune": "Dalmine", "via": "Via Locatelli", "target": "Tenaris Dalmine", "lat": 45.648, "lon": 9.602},
+    {"comune": "Stezzano", "via": "Via Guzzascherra", "target": "C.C. Le Due Torri", "lat": 45.641, "lon": 9.635},
+    {"comune": "Treviglio", "via": "Piazzale Ospedale", "target": "Zona Ospedale Treviglio", "lat": 45.525, "lon": 9.585},
+    {"comune": "Castione Presolana", "via": "Via Passo Presolana", "target": "Rifugio / Sentiero", "lat": 45.912, "lon": 10.081},
+    {"comune": "Zogno", "via": "Via Martiri Libertà", "target": "Centro Scolastico", "lat": 45.795, "lon": 9.664},
+    {"comune": "San Pellegrino", "via": "Viale della Vittoria", "target": "QC Terme / Hotel", "lat": 45.835, "lon": 9.665},
+    {"comune": "Lovere", "via": "Lungolago Marconi", "target": "Porto Turistico", "lat": 45.814, "lon": 10.071},
+    # --- AREA BRESCIA ---
+    {"comune": "Brescia", "via": "Piazza della Loggia", "target": "Centro Storico Loggia", "lat": 45.539, "lon": 10.220},
+    {"comune": "Brescia", "via": "Piazzale Spedali Civili", "target": "Ospedale Civile Brescia", "lat": 45.551, "lon": 10.228},
+    {"comune": "Brescia", "via": "Via Mompiano", "target": "Stadio Rigamonti", "lat": 45.568, "lon": 10.235},
+    {"comune": "Desenzano del Garda", "via": "Lungolago Cesare Battisti", "target": "Porto di Desenzano", "lat": 45.470, "lon": 10.539},
+    {"comune": "Montichiari", "via": "Via Aeroporto", "target": "Aeroporto G. D'Annunzio", "lat": 45.428, "lon": 10.330},
+    {"comune": "Darfo Boario Terme", "via": "Via Galvani", "target": "Centro Congressi / Terme", "lat": 45.888, "lon": 10.188},
+    {"comune": "Iseo", "via": "Viale Repubblica", "target": "Lungolago Iseo", "lat": 45.659, "lon": 10.051},
+    {"comune": "Erbusco", "via": "Via Franciacorta", "target": "Zona Cantine Franciacorta", "lat": 45.591, "lon": 9.972}
+]
 
-scenari_clinici = [
+SCENARI_CLINICI = [
     {"sintomi": "Sospetto IMA (Infarto) - Dolore toracico", "codice_reale": "ROSSO", "tipo": "Cardio", "necessita_msa": True},
     {"sintomi": "Arresto Cardio-Respiratorio - Manovre in corso", "codice_reale": "ROSSO", "tipo": "Rianimatorio", "necessita_msa": True},
     {"sintomi": "Sospetto ICTUS (Stroke) - Afasia", "codice_reale": "ROSSO", "tipo": "Neuro", "necessita_msa": True},
     {"sintomi": "Incidente Auto-Moto - Dinamica Maggiore", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
-    {"sintomi": "Infortunio sul Lavoro - Schiacciamento", "codice_reale": "ROSSO", "tipo": "Trauma", "necessita_msa": True},
     {"sintomi": "Caduta accidentale - Sospetta frattura femore", "codice_reale": "GIALLO", "tipo": "Trauma", "necessita_msa": False},
     {"sintomi": "Crisi Epilettica in atto", "codice_reale": "GIALLO", "tipo": "Neuro", "necessita_msa": False},
     {"sintomi": "Paziente anziano con febbre alta e astenia", "codice_reale": "VERDE", "tipo": "Medico", "necessita_msa": False}
