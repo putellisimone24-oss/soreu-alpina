@@ -7,13 +7,17 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. GESTIONE DATABASE PERSISTENTE (SQLITE) - AGGIUNTO
+# 1. GESTIONE DATABASE PERSISTENTE (SQLITE)
 # =========================================================
 def init_db():
     conn = sqlite3.connect('centrale.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS utenti 
                  (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
+    
+    # --- AGGIUNTO PER INTERFORZE: Tabella per i Vigili del Fuoco ---
+    c.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
     
     c.execute("SELECT COUNT(*) FROM utenti")
     if c.fetchone()[0] == 0:
