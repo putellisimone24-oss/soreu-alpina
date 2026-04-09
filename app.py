@@ -31,10 +31,11 @@ init_db()
 # Configurazione Pagina
 st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
 
-# Inizializzazione Session State per evitare errori di variabili mancanti
+# Inizializzazione Session State
 if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
 if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
-if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
+if 'ruolo' not in st.session_state: st.session_state.ruolo = None
+if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
 
 # =========================================================
 # 2. LOGIN
@@ -52,36 +53,33 @@ if st.session_state.utente_connesso is None:
         if res and res[0] == p_in:
             st.session_state.utente_connesso = u_in
             st.rerun()
-        else:
-            st.error("Credenziali errate")
+        else: st.error("Credenziali errate")
     st.stop()
 
 # =========================================================
-# 3. SELEZIONE POSTAZIONE + GESTIONE ADMIN
+# 3. SELEZIONE POSTAZIONE (UNICA E PULITA)
 # =========================================================
 if st.session_state.scrivania_selezionata is None:
-    st.title(f"Benvenuto, {st.session_state.utente_connesso.upper()}")
+    st.title(f"🎧 SOREU Alpina - Sala Operativa")
+    st.write(f"Utente: **{st.session_state.utente_connesso.upper()}**")
 
-    # --- PANNELLO GESTIONE UTENTI (Solo per Admin) ---
+    # --- PANNELLO GESTIONE ACCOUNT (Solo Admin) ---
     if st.session_state.utente_connesso == 'admin':
         with st.expander("🛠️ GESTIONE ACCOUNT OPERATORI"):
             col1, col2 = st.columns(2)
             conn = sqlite3.connect('centrale.db')
-            
             with col1:
                 st.write("**Aggiungi Operatore**")
-                new_u = st.text_input("Username", key="new_u").lower().strip()
-                new_p = st.text_input("Password", type="password", key="new_p")
+                new_u = st.text_input("Username", key="reg_u").lower().strip()
+                new_p = st.text_input("Password", type="password", key="reg_p")
                 if st.button("Salva Nuovo Utente"):
                     if new_u and new_p:
                         try:
                             c = conn.cursor()
                             c.execute("INSERT INTO utenti VALUES (?,?,1,'Operatore')", (new_u, new_p))
                             conn.commit()
-                            st.success(f"Utente {new_u} creato!")
-                            st.rerun()
+                            st.success(f"Utente {new_u} creato!"); st.rerun()
                         except: st.error("Errore: esiste già.")
-            
             with col2:
                 st.write("**Elimina Operatore**")
                 df_u = pd.read_sql_query("SELECT username FROM utenti WHERE username != 'admin'", conn)
@@ -91,21 +89,28 @@ if st.session_state.scrivania_selezionata is None:
                         c = conn.cursor()
                         c.execute("DELETE FROM utenti WHERE username=?", (u_to_del,))
                         conn.commit()
-                        st.success("Eliminato!")
-                        st.rerun()
+                        st.success("Eliminato!"); st.rerun()
             conn.close()
-
-    st.divider()
-    st.subheader("🖥️ Seleziona la tua Scrivania")
     
+    st.divider()
+    st.subheader("🖥️ Selezione Postazione di Lavoro")
+    
+    # Griglia Scrivanie (9 Desk)
     cols = st.columns(3)
     for i in range(1, 10):
         with cols[(i-1)%3]:
-            # Risoluzione BUG: usiamo 'key' unico per ogni bottone
             label = "SALA - ADMIN" if st.session_state.utente_connesso == 'admin' else f"SALA - DESK {i}"
-            if st.button(f"🖥️ {label}", key=f"btn_desk_{i}", use_container_width=True):
+            if st.button(f"🖥️ {label}", key=f"desk_select_{i}", use_container_width=True):
                 st.session_state.scrivania_selezionata = label
+                st.session_state.ruolo = "centrale"
                 st.rerun()
+    
+    st.divider()
+    if st.button("🚑 Accedi come Equipaggio Mezzo (Esterno)", use_container_width=True):
+        st.session_state.scrivania_selezionata = "MEZZO"
+        st.session_state.ruolo = "mezzo"
+        st.rerun()
+    st.stop()
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
 # =========================================================
