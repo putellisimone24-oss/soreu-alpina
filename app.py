@@ -95,21 +95,66 @@ def riproduci_suono_notifica():
     sound_html = f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>'
     st.components.v1.html(sound_html, height=0, width=0)
 
-# 1. DATABASE MEZZI SANITARI REALI
+# =========================================================
+# DATABASE MEZZI AGGIORNATO - SOREU ALPINA
+# =========================================================
 if 'database_mezzi' not in st.session_state:
     st.session_state.database_mezzi = {
-        "MSA 02 001": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6869, "lon": 9.6272, "tipo": "MSA", "sede": "Osp. Papa Giovanni XXIII"},
-        "MSA 2 004": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5220, "lon": 9.5990, "tipo": "MSA", "sede": "Osp. Treviglio"},
-        "MSA 1 003": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5203, "lon": 9.7547, "tipo": "MSA", "sede": "Osp. Romano"},
-        "CRI_BG_161.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
-        "CRI_BG_162.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6928, "lon": 9.6428, "tipo": "MSB", "sede": "CRI Bergamo"},
-        "CBBG_014.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6725, "lon": 9.6450, "tipo": "MSB", "sede": "Croce Bianca Bergamo"},
-        "CABG_301.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.7100, "lon": 9.6500, "tipo": "MSB", "sede": "Croce Azzurra Almenno"},
-        "CRITRE_124.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5268, "lon": 9.5925, "tipo": "MSB", "sede": "CRI Treviglio"},
-        "CRITRE_135.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5532, "lon": 9.6198, "tipo": "MSB", "sede": "CRI Treviglio"},
-        "CRIHBG_154.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.5940, "lon": 9.6910, "tipo": "MSB", "sede": "CRI Urgnano"},
-        "CRIDAL_118.C": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6475, "lon": 9.6012, "tipo": "MSB", "sede": "CRI Dalmine"},
-        "HORUS I-LMBD": {"stato": "Libero in Sede", "colore": "🟢", "lat": 45.6710, "lon": 9.7020, "tipo": "ELI", "sede": "Base Elisoccorso Bergamo"}
+        # --- MEZZI AVANZATI (MSA 1, MSA 2, ELI) ---
+        "MSA 2 TREVIGLIO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
+            "sede": "Automedica - P.le Luigi Meneguzzo, Treviglio", "lat": 45.5185, "lon": 9.5998
+        },
+        "MSA 2 BERGAMO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
+            "sede": "Ospedale Papa Giovanni XXIII", "lat": 45.6869, "lon": 9.6272
+        },
+        "MSA 1 DALMINE": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
+            "sede": "CRI Dalmine (Infermiere)", "lat": 45.6475, "lon": 9.6012
+        },
+        "MSA 1 ALZANO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
+            "sede": "CRI Alzano Lombardo", "lat": 45.7310, "lon": 9.7280
+        },
+        "ELI BERGAMO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
+            "sede": "Base Elisoccorso Bergamo", "lat": 45.6710, "lon": 9.7020
+        },
+
+        # --- MEZZI BASE (MSB - ASSOCIAZIONI) ---
+        "CRITRE_124.C": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI Treviglio - Via Abate Crippa", "lat": 45.5242, "lon": 9.5912
+        },
+        "CRITRE_135.C": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI Castel Rozzone", "lat": 45.5528, "lon": 9.6205
+        },
+        "CRI_BG_101.C": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI Bergamo", "lat": 45.6948, "lon": 9.6761
+        },
+        "BIANCA_BG_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Croce Bianca Bergamo", "lat": 45.7010, "lon": 9.6620
+        },
+        "BLU_LOVERE_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Croce Blu Lovere", "lat": 45.8140, "lon": 10.0710
+        },
+        "BLU_GROMO_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Croce Blu Gromo", "lat": 45.9180, "lon": 9.9270
+        },
+        "CRI_SANPEL_01": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "CRI San Pellegrino Terme", "lat": 45.8360, "lon": 9.6660
+        },
+        "VOLONTARI_TREVIOLO": {
+            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
+            "sede": "Volontari Treviolo", "lat": 45.6730, "lon": 9.6100
+        }
     }
 
 # 2. DATABASE OSPEDALI REALI
