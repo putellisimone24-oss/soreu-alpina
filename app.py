@@ -539,7 +539,7 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                        if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                       if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
                             if codice_scelto != ev['codice_reale']:
                                 st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
                             else:
@@ -551,7 +551,8 @@ else:
                                     st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                     aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
                                 
-                               st.session_state.missioni[m_scelto] = {
+                                # --- INIZIO BLOCCO MISSIONE (ALLINEATO) ---
+                                st.session_state.missioni[m_scelto] = {
                                     "target": f"{ev['via']}, {ev['comune']}", 
                                     "lat": ev['lat'], 
                                     "lon": ev['lon'],
@@ -560,8 +561,29 @@ else:
                                     "timestamp_creazione": time.time(), 
                                     "richiesto_ospedale": False,
                                     "patologia": ev.get("sintomi", "Generica")
-                                } 
+                                }
+                                # --- FINE BLOCCO MISSIONE ---
 
+                            # --- LOGICA VVF (Sotto il ciclo for, stesso allineamento del for) ---
+                            keys_vvf = ["Incidente", "Incendio", "Schiacciamento", "Incastrato"]
+                            if any(k.lower() in ev.get('sintomi', '').lower() for k in keys_vvf):
+                                try:
+                                    conn_vvf = sqlite3.connect('centrale.db')
+                                    c_vvf = conn_vvf.cursor()
+                                    c_vvf.execute('''CREATE TABLE IF NOT EXISTS missioni_vvf 
+                                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario TEXT, comune TEXT, indirizzo TEXT, stato_vvf TEXT, ora TEXT, note TEXT)''')
+                                    c_vvf.execute('''INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) 
+                                                 VALUES (?, ?, ?, ?, ?, ?)''', 
+                                                 (ev['sintomi'], ev['comune'], ev['via'], "ALLERTATI", datetime.now().strftime("%H:%M"), "Richiesto supporto da SOREU"))
+                                    conn_vvf.commit()
+                                    conn_vvf.close()
+                                    st.toast("🚒 Missione trasmessa ai VVF!", icon="🔥")
+                                except:
+                                    pass
+
+                            st.session_state.evento_corrente = None
+                            st.rerun()
+                           
                             # =========================================================
                             # 🚒 LOGICA INTEGRATA SOREU - VVF (AGGIUNTA QUI)
                             # =========================================================
