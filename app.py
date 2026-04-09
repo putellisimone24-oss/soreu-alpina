@@ -143,10 +143,6 @@ if 'database_mezzi' not in st.session_state:
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
             "sede": "CRI Castel Rozzone - Via Monte Cervino 7", "lat": 45.5528, "lon": 9.6205
         },
-        "CRI_CARAV_151.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Caravaggio - Circonvallazione", "lat": 45.4981, "lon": 9.6425
-        },
         "COOP_ATA_TREV": {
             "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
             "sede": "COOP ATA Treviglio", "lat": 45.5210, "lon": 9.5930
