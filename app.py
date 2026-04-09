@@ -7,35 +7,6 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 1. INIZIALIZZAZIONE SESSION STATE (RISOLUZIONE ERRORI)
-# =========================================================
-# Questo blocco DEVE essere eseguito prima di ogni altra logica
-def init_session_state():
-    chiavi_default = {
-        'utente_connesso': None,
-        'fase_cambio_pw': False,
-        'scrivania_selezionata': None,
-        'ruolo': None,
-        'mezzo_selezionato': None,
-        'turno_iniziato': False,
-        'evento_corrente': None,
-        'last_mission_time': time.time(),
-        'auto_mission_active': False,
-        'freq_missioni': 60,
-        'missioni': {},
-        'registro_radio': [],
-        'notifiche_centrale': [],
-        'suono_riprodotto': False,
-        'log_chiamate': [],
-        'time_mult': 1.0,
-        'auto_mode': False,
-        'richiesta_chiusura': False
-    }
-    for chiave, valore in chiavi_default.items():
-        if chiave not in st.session_state:
-            st.session_state[chiave] = valore
-
-# =========================================================
 # 2. GESTIONE DATABASE (SQLITE)
 # =========================================================
 def init_db():
