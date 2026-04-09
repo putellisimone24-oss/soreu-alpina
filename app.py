@@ -551,12 +551,16 @@ else:
                                     st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                     aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
                                 
-                                st.session_state.missioni[m_scelto] = {
-                                    "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
-                                    "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
-                                    "timestamp_creazione": time.time(), "richiesto_ospedale": False,
+                               st.session_state.missioni[m_scelto] = {
+                                    "target": f"{ev['via']}, {ev['comune']}", 
+                                    "lat": ev['lat'], 
+                                    "lon": ev['lon'],
+                                    "codice": codice_scelto, 
+                                    "ospedale_assegnato": osp_selezionato,
+                                    "timestamp_creazione": time.time(), 
+                                    "richiesto_ospedale": False,
                                     "patologia": ev.get("sintomi", "Generica")
-                                }
+                                } 
 
                             # =========================================================
                             # 🚒 LOGICA INTEGRATA SOREU - VVF (AGGIUNTA QUI)
