@@ -567,34 +567,46 @@ else:
                         mezzi_scelti = st.multiselect("Seleziona Mezzi da inviare", df_calcolo["Mezzo"].tolist())
                         osp_selezionato = st.selectbox("Pre-allerta Ospedale", list(st.session_state.database_ospedali.keys()))
                         
-                        if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
+                       if st.button("🚀 INVIA MEZZI", type="primary", use_container_width=True) and mezzi_scelti:
                                 if codice_scelto != ev['codice_reale']:
                                     st.toast(f"⚠️ Triage non ottimale! Il protocollo suggeriva codice {ev['codice_reale']}.", icon="⚠️")
                                 else:
                                     st.toast("✔️ Ottimo Triage! Codice coerente con i sintomi.", icon="👍")
                                     
-                                # --- AGGIUNTO PER INTERFORZE: Notifica ai VVF se lo scenario lo richiede ---
-                                # Se lo scenario contiene parole chiave come Incidente, Incendio o Schiacciamento
-                                if any(parola in ev['sintomi'] for parola in ["Incidente", "Incendio", "Schiacciamento", "Annegamento"]):
-                                    conn = sqlite3.connect('centrale.db')
-                                    c = conn.cursor()
-                                    c.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
-                                             (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico urgente."))
-                                    conn.commit()
-                                    conn.close()
-                                    st.toast("🚒 Scheda inviata automaticamente ai Vigili del Fuoco!", icon="🔥")
+                                # --- AGGIUNTO PER INTERFORZE: Notifica ai VVF ---
+                                parole_chiave_vvf = ["Incidente", "Incendio", "Schiacciamento", "Annegamento", "Incastrato"]
+                                if any(parola in ev['sintomi'] for parola in parole_chiave_vvf):
+                                    try:
+                                        conn = sqlite3.connect('centrale.db')
+                                        c = conn.cursor()
+                                        c.execute("INSERT INTO missioni_vvf (scenario, comune, indirizzo, stato_vvf, ora, note) VALUES (?, ?, ?, ?, ?, ?)", 
+                                                 (ev['sintomi'], ev['comune'], ev['via'], "IN ATTESA", datetime.now().strftime("%H:%M"), "Richiesto supporto tecnico urgente."))
+                                        conn.commit()
+                                        conn.close()
+                                        st.toast("🚒 Scheda inviata automaticamente ai Vigili del Fuoco!", icon="🔥")
+                                    except Exception as e:
+                                        st.error(f"Errore database VVF: {e}")
 
+                                # Ciclo assegnazione mezzi (Qui c'era l'errore di indentazione)
                                 for m_scelto in mezzi_scelti:
                                     if not st.session_state.auto_mode:
-                                        st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"; st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
+                                        st.session_state.database_mezzi[m_scelto]["stato"] = "1 - Partenza da sede"
+                                        st.session_state.database_mezzi[m_scelto]["colore"] = "🟡"
                                         aggiungi_log_radio(m_scelto, "STATO 1: Partenza da sede direzione luogo intervento.")
+                                    
                                     st.session_state.missioni[m_scelto] = {
-                                        "target": f"{ev['via']}, {ev['comune']}", "lat": ev['lat'], "lon": ev['lon'],
-                                        "codice": codice_scelto, "ospedale_assegnato": osp_selezionato,
-                                        "timestamp_creazione": time.time(), "richiesto_ospedale": False,
+                                        "target": f"{ev['via']}, {ev['comune']}", 
+                                        "lat": ev['lat'], 
+                                        "lon": ev['lon'],
+                                        "codice": codice_scelto, 
+                                        "ospedale_assegnato": osp_selezionato,
+                                        "timestamp_creazione": time.time(), 
+                                        "richiesto_ospedale": False,
                                         "patologia": ev.get("sintomi", "Generica")
                                     }
-                                st.session_state.evento_corrente = None; st.rerun()
+                                
+                                st.session_state.evento_corrente = None
+                                st.rerun()
                                 
                             for m_scelto in mezzi_scelti:
                                 if not st.session_state.auto_mode:
