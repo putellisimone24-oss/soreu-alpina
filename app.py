@@ -7,71 +7,67 @@ import sqlite3
 from datetime import datetime
 
 # =========================================================
-# 2. GESTIONE DATABASE (SQLITE)
+# 1. CONFIGURAZIONE PAGINA E STATO (PRIMA DI TUTTO)
 # =========================================================
-def init_db():
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS utenti 
-                 (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
-    
-    c.execute("SELECT COUNT(*) FROM utenti")
-    if c.fetchone()[0] == 0:
-        utenti_iniziali = [
-            ('admin', 'admin', 0, 'Admin'),
-            ('simone.putelli', 'simone', 1, 'Operatore'),
-            ('simone.marinoni', 'simone', 1, 'Operatore'),
-            ('andrea.giuliano', 'andrea', 1, 'Operatore')
-        ]
-        c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti_iniziali)
-    conn.commit()
-    conn.close()
-
-def get_tutti_utenti():
-    conn = sqlite3.connect('centrale.db')
-    df = pd.read_sql_query("SELECT username, ruolo, cambio_obbligatorio FROM utenti", conn)
-    conn.close()
-    return df
-
-def aggiungi_utente(u, p, r):
-    try:
-        conn = sqlite3.connect('centrale.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO utenti VALUES (?,?,1,?)", (u.lower().strip(), p, r))
-        conn.commit()
-        conn.close()
-        return True
-    except: return False
-
-def elimina_utente(u):
-    if u == 'admin': return False
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM utenti WHERE username=?", (u,))
-    conn.commit()
-    conn.close()
-    return True
-
-def get_utente_db(username):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("SELECT username, password, cambio_obbligatorio, ruolo FROM utenti WHERE username=?", (username,))
-    res = c.fetchone()
-    conn.close()
-    return res
-
-def aggiorna_password_db(username, nuova_pw):
-    conn = sqlite3.connect('centrale.db')
-    c = conn.cursor()
-    c.execute("UPDATE utenti SET password=?, cambio_obbligatorio=0 WHERE username=?", (nuova_pw, username))
-    conn.commit()
-    conn.close()
-
-# Esecuzione setup iniziale
 st.set_page_config(page_title="SOREU Alpina - PRO System", layout="wide")
-init_session_state()
-init_db()
 
+# Inizializzazione manuale e diretta (Evita NameError)
+if 'utente_connesso' not in st.session_state: st.session_state.utente_connesso = None
+if 'scrivania_selezionata' not in st.session_state: st.session_state.scrivania_selezionata = None
+if 'ruolo' not in st.session_state: st.session_state.ruolo = None
+if 'turno_iniziato' not in st.session_state: st.session_state.turno_iniziato = False
+if 'evento_corrente' not in st.session_state: st.session_state.evento_corrente = None
+if 'last_mission_time' not in st.session_state: st.session_state.last_mission_time = time.time()
+if 'auto_mission_active' not in st.session_state: st.session_state.auto_mission_active = False
+if 'freq_missioni' not in st.session_state: st.session_state.freq_missioni = 60
+if 'registro_radio' not in st.session_state: st.session_state.registro_radio = []
+if 'notifiche_centrale' not in st.session_state: st.session_state.notifiche_centrale = []
+if 'fase_cambio_pw' not in st.session_state: st.session_state.fase_cambio_pw = False
+
+# =========================================================
+# 2. DATABASE UTENTI
+# =========================================================
+def gestione_db(azione, dati=None):
+    conn = sqlite3.connect('centrale.db')
+    c = conn.cursor()
+    if azione == "init":
+        c.execute('''CREATE TABLE IF NOT EXISTS utenti 
+                     (username TEXT PRIMARY KEY, password TEXT, cambio_obbligatorio INTEGER, ruolo TEXT)''')
+        c.execute("SELECT COUNT(*) FROM utenti")
+        if c.fetchone()[0] == 0:
+            utenti = [('admin', 'admin', 0, 'Admin'), 
+                      ('simone.putelli', 'simone', 1, 'Operatore'),
+                      ('andrea.giuliano', 'andrea', 1, 'Operatore')]
+            c.executemany("INSERT INTO utenti VALUES (?,?,?,?)", utenti)
+    elif azione == "login":
+        c.execute("SELECT * FROM utenti WHERE username=?", (dati,))
+        res = c.fetchone()
+        conn.close()
+        return res
+    elif azione == "aggiungi":
+        try:
+            c.execute("INSERT INTO utenti VALUES (?,?,1,'Operatore')", (dati[0], dati[1]))
+        except: pass
+    conn.commit()
+    conn.close()
+
+gestione_db("init")
+
+# =========================================================
+# 3. LOGICA DI ACCESSO
+# =========================================================
+if st.session_state.utente_connesso is None:
+    st.title("🚑 SOREU Alpina - Accesso")
+    u = st.text_input("Username").lower().strip()
+    p = st.text_input("Password", type="password")
+    if st.button("ACCEDI"):
+        user = gestione_db("login", u)
+        if user and user[1] == p:
+            st.session_state.utente_connesso = u
+            st.rerun()
+        else:
+            st.error("Credenziali non valide")
+    st.stop()
 # =========================================================
 # 3. LOGIN E SICUREZZA
 # =========================================================
