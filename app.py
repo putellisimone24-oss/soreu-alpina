@@ -90,15 +90,13 @@ if st.session_state.utente_connesso is None:
 # =========================================================
 tab_centrale, tab_mezzi, tab_risorse = st.tabs([
     "🖥️ Centrale Operativa", 
+    "🚑 Gestione Mezzi",
     "👥 Risorse e Account"
 ])
 
 with tab_centrale:
     st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
     # Inserisci qui il tuo codice originale per la gestione eventi
-
-with tab_mezzi:
-    st.header("🚑 Monitoraggio Mezzi")
     
      # Elenco mezzi semplice (Per tutti)
     if 'database_mezzi' in st.session_state:
