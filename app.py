@@ -84,6 +84,17 @@ if st.session_state.utente_connesso is None:
                     st.rerun()
             else: st.error("ID o Password errati.")
     st.stop()
+    
+# =========================================================
+# 3. INTERFACCIA A TAB (COMUNICAZIONI RIMOSSA)
+# =========================================================
+    tab_centrale,tab_risorse = st.tabs([
+    "🖥️ Centrale Operativa", 
+    "👥 Risorse e Account"
+])
+    with tab_centrale:
+    st.subheader(f"Centrale Operativa - Operatore: {st.session_state.utente_connesso.upper()}")
+    # Inserisci qui il tuo codice originale per la gestione eventi
 
     # --- PANNELLO GESTIONE ACCOUNT (SOLO ADMIN) ---
     if st.session_state.ruolo == "Admin":
