@@ -11,6 +11,16 @@ from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 st_autorefresh(interval=30000, key="vvf_auto_refresh") # Ogni 30 secondi controlla il sistema
 
+# Nel blocco "Operazioni Tecniche sul Posto" dell'app VVF
+if st.button("🚑 RICHIEDI ASSISTENZA SANITARIA"):
+    conn = sqlite3.connect('centrale_unica.db')
+    conn.execute('''INSERT INTO richieste_sanitarie (comune, indirizzo, scenario_vvf, stato) 
+                    VALUES (?, ?, ?, ?)''', 
+                 (intv['comune'], intv['indirizzo'], intv['tipologia'], 'PENDENTE'))
+    conn.commit()
+    conn.close()
+    st.toast("Richiesta inviata alla SOREU Alpina!")
+
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
 # =========================================================
