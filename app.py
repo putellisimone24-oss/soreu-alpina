@@ -6,6 +6,11 @@ import time
 import sqlite3
 from datetime import datetime
 
+# Per il refresh automatico (fondamentale per le missioni automatiche)
+# Se non hai la libreria, usa il trucco del meta-refresh o installala
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(interval=30000, key="vvf_auto_refresh") # Ogni 30 secondi controlla il sistema
+
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
 # =========================================================
