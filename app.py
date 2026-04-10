@@ -1,15 +1,10 @@
 import streamlit as st
 import pandas as pd
 import random
+import math
 import time
-from pymilvus import MilvusClient
-from streamlit_autorefresh import st_autorefresh
-import folium
-from streamlit_folium import st_folium
-
-# --- 1. CONFIGURAZIONE AGGIORNAMENTO AUTOMATICO ---
-# Questo comando ricarica l'intera app ogni 20 secondi
-st_autorefresh(interval=20000, key="radar_refresh")
+import sqlite3
+from datetime import datetime
 
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
@@ -570,7 +565,7 @@ else:
             col_evento, col_mappa = st.columns([1.5, 2])
             with col_evento:
                 st.header("📋 Ricezione Chiamate")
-                if st.button("🔔 RISPONDI - nuova chiamata", type="primary", use_container_width=True):
+                if st.button("🔔 Forza Generazione Chiamata", type="primary", use_container_width=True):
                     scelta_indirizzo = random.choice(database_indirizzi)
                     scelta_clinica = random.choice(scenari_clinici)
                     st.session_state.evento_corrente = {
@@ -627,47 +622,15 @@ else:
                     else: st.error("Nessun mezzo disponibile!")
                 else: st.info("In attesa di chiamata da NUE 112...")
                     
-            def genera_mappa_interattiva():
-    # Centriamo la mappa su Bergamo/Brescia
-    m = folium.Map(location=[45.65, 9.90], zoom_start=9, tiles="cartodbpositron")
-
-    # --- AGGIUNGIAMO I MEZZI SOREU ---
-    # Supponiamo che st.session_state.database_mezzi contenga i tuoi mezzi
-    for nome, dati in st.session_state.database_mezzi.items():
-        colore = "blue" if dati['stato'] == "In Sede" else "orange"
-        icona = "ambulance"
-        
-        folium.Marker(
-            location=[dati['lat'], dati['lon']],
-            popup=f"<b>Mezzo:</b> {nome}<br><b>Stato:</b> {dati['stato']}",
-            tooltip=nome,
-            icon=folium.Icon(color=colore, icon=icona, prefix='fa')
-        ).add_to(m)
-
-    # --- AGGIUNGIAMO LE EVENTUALI EMERGENZE VVF (Dal Radar Zilliz) ---
-    try:
-        emergenze = client.query(
-            collection_name="richieste_vvf_soreu",
-            filter="stato == 'PENDENTE'",
-            output_fields=["id", "comune", "scenario", "indirizzo"]
-        )
-        for em in emergenze:
-            # Qui usiamo coordinate fittizie o reali se le hai
-            # Per ora mettiamole vicino a Bergamo come esempio
-            folium.Marker(
-                location=[45.69, 9.67], 
-                popup=f"🚨 <b>RICHIESTA VVF</b><br>{em['scenario']}<br>{em['indirizzo']}",
-                icon=folium.Icon(color='red', icon='fire', prefix='fa')
-            ).add_to(m)
-    except:
-        pass
-
-    return m
-
-# --- VISUALIZZAZIONE NELLA TABELLA ---
-st.subheader("🗺️ Cartografia Operativa Dinamica")
-mappa_oggetto = genera_mappa_interattiva()
-st_folium(mappa_oggetto, width=1300, height=500)
+            with col_mappa:
+                st.header("🗺️ Mappa Area Alpina")
+                punti_mappa = [{"lat": d["lat"], "lon": d["lon"]} for d in st.session_state.database_mezzi.values()]
+                if st.session_state.evento_corrente:
+                    ev = st.session_state.evento_corrente
+                    for i in range(0, 360, 45):
+                        punti_mappa.append({"lat": ev["lat"] + 0.005 * math.cos(math.radians(i)), "lon": ev["lon"] + 0.005 * math.sin(math.radians(i))})
+                        
+                if punti_mappa: st.map(pd.DataFrame(punti_mappa), zoom=9)
                 
                 st.subheader("📻 Registro Radio SOREU")
                 if st.session_state.registro_radio:
