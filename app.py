@@ -6,6 +6,12 @@ import time
 import sqlite3
 from datetime import datetime
 
+# Devi installare questa libreria con: pip install streamlit-autorefresh
+from streamlit_autorefresh import st_autorefresh
+
+# Aggiorna la pagina ogni 30 secondi per controllare nuovi messaggi/VVF
+st_autorefresh(interval=30000, key="datarefresh")
+
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
 # =========================================================
