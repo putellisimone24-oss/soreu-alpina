@@ -568,7 +568,7 @@ else:
             col_evento, col_mappa = st.columns([1.5, 2])
             with col_evento:
                 st.header("📋 Ricezione Chiamate")
-                if st.button("🔔 Forza Generazione Chiamata", type="primary", use_container_width=True):
+                if st.button("🔔 RISPONDI - nuova chiamata", type="primary", use_container_width=True):
                     scelta_indirizzo = random.choice(database_indirizzi)
                     scelta_clinica = random.choice(scenari_clinici)
                     st.session_state.evento_corrente = {
