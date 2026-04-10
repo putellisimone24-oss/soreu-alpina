@@ -11,16 +11,23 @@ from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 st_autorefresh(interval=30000, key="vvf_auto_refresh") # Ogni 30 secondi controlla il sistema
 
-# Nel blocco "Operazioni Tecniche sul Posto" dell'app VVF
-if st.button("🚑 RICHIEDI ASSISTENZA SANITARIA"):
-    conn = sqlite3.connect('centrale_unica.db')
-    conn.execute('''INSERT INTO richieste_sanitarie (comune, indirizzo, scenario_vvf, stato) 
-                    VALUES (?, ?, ?, ?)''', 
-                 (intv['comune'], intv['indirizzo'], intv['tipologia'], 'PENDENTE'))
-    conn.commit()
-    conn.close()
-    st.toast("Richiesta inviata alla SOREU Alpina!")
+# In cima alla pagina della SOREU Alpina, sotto il titolo
+conn = sqlite3.connect('centrale_unica.db')
+richieste_vvf = pd.read_sql_query("SELECT * FROM richieste_sanitarie WHERE stato='PENDENTE'", conn)
+conn.close()
 
+for _, req in richieste_vvf.iterrows():
+    with st.warning(f"🚨 RICHIESTA DA VVF: {req['scenario_vvf']} a {req['comune']}"):
+        st.write(f"I Vigili del Fuoco richiedono supporto sanitario in {req['indirizzo']}")
+        if st.button(f"Genera Evento per Richiesta #{req['id']}"):
+            # 1. Qui chiami la tua funzione genera_evento() della SOREU
+            # 2. Aggiorni lo stato della richiesta per farla sparire
+            conn = sqlite3.connect('centrale_unica.db')
+            conn.execute("UPDATE richieste_sanitarie SET stato='PRESA_IN_CARICO' WHERE id=?", (req['id'],))
+            conn.commit()
+            conn.close()
+            st.rerun()
+            
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
 # =========================================================
