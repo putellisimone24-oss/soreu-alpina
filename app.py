@@ -6,17 +6,16 @@ import time
 import sqlite3
 from datetime import datetime
 
-# --- CONFIGURAZIONE PONTE INTERFORZE ---
-def crea_tabella_ponte():
-    # USA LO STESSO NOME FILE DB CHE USI NEI VVF (es. 'centrale_unica.db')
-    conn = sqlite3.connect('centrale_unica.db') 
+def init_db():
+    conn = sqlite3.connect('centrale_unica.db') # Nome nuovo
     c = conn.cursor()
+    # ... le tue tabelle esistenti ...
+    
+    # AGGIUNGI QUESTA:
     c.execute('''CREATE TABLE IF NOT EXISTS richieste_sanitarie 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  comune TEXT, 
-                  indirizzo TEXT, 
-                  scenario_vvf TEXT, 
-                  stato TEXT)''')
+                  comune TEXT, indirizzo TEXT, scenario_vvf TEXT, stato TEXT)''')
+    
     conn.commit()
     conn.close()
 
@@ -181,6 +180,37 @@ with st.sidebar:
 # 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU Alpina")
+# --- RADAR RICHIESTE INTERFORZE (VVF -> SOREU) ---
+st.divider()
+conn = sqlite3.connect('centrale_unica.db')
+richieste = pd.read_sql_query("SELECT * FROM richieste_sanitarie WHERE stato='PENDENTE'", conn)
+conn.close()
+
+if not richieste.empty:
+    st.subheader("⚠️ Richieste Supporto da Vigili del Fuoco")
+    for _, req in richieste.iterrows():
+        with st.warning(f"🚨 **RICHIESTA DA VVF**: {req['scenario_vvf']} a {req['comune']}"):
+            st.write(f"**Indirizzo:** {req['indirizzo']}")
+            
+            if st.button(f"✅ Prendi in carico Richiesta #{req['id']}", key=f"req_{req['id']}"):
+                # 1. Crea l'evento nella SOREU usando i dati dei VVF
+                nuovo_evento = {
+                    "tipo": "Supporto Tecnico/Sanitario",
+                    "target": f"{req['indirizzo']} ({req['comune']})",
+                    "priorita": "Rosso",
+                    "codice": "VVF-REQ"
+                }
+                # Qui aggiungi l'evento alla tua lista session_state.eventi_disponibili
+                st.session_state.eventi_disponibili.append(nuovo_evento)
+                
+                # 2. Segna come gestita nel database per farla sparire
+                conn = sqlite3.connect('centrale_unica.db')
+                conn.execute("UPDATE richieste_sanitarie SET stato='PRESA_IN_CARICO' WHERE id=?", (req['id'],))
+                conn.commit()
+                conn.close()
+                
+                st.success("Evento creato nella lista d'attesa!")
+                st.rerun()
 
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
