@@ -7,6 +7,10 @@ import sqlite3
 from datetime import datetime
 from pymilvus import MilvusClient
 
+from streamlit_autorefresh import st_autorefresh
+# Ricarica l'app ogni 10 secondi per controllare nuove chiamate dai VVF
+st_autorefresh(interval=10000, key="datarefresh")
+
 # =========================================================
 # 1. CONNESSIONE ZILLIZ CLOUD (PONTE CON VVF)
 # =========================================================
