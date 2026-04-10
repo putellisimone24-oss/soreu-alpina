@@ -91,7 +91,7 @@ if st.session_state.utente_connesso is None:
 # 3. SIDEBAR - RISORSE E ACCOUNT (IL TUO BADGE LATERALE)
 # =========================================================
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/3/32/Logo_118.svg", width=80)
+    st.image("https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.e015.regione.lombardia.it%2Fsite%2Fadherent-detail%3Fid%3D644&ved=0CBYQjRxqFwoTCKC-157-4ZMDFQAAAAAdAAAAABAI&opi=89978449", width=80)
     st.title("📟 Pannello Sistema")
     st.write(f"Operatore: **{st.session_state.utente_connesso.upper()}**")
     
