@@ -88,11 +88,11 @@ if st.session_state.utente_connesso is None:
 # ... (tutta la parte iniziale di login e db che hai già va bene) ...
 
 # =========================================================
-# 3. SIDEBAR - GESTIONE SISTEMA (MEZZI + ACCOUNT)
+# 3. SIDEBAR - RISORSE E ACCOUNT (IL TUO BADGE LATERALE)
 # =========================================================
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/3/32/Logo_118.svg", width=80)
-    st.title("📟 Sistema SOREU")
+    st.title("📟 Pannello Sistema")
     st.write(f"Operatore: **{st.session_state.utente_connesso.upper()}**")
     
     if st.button("🚪 Logout", use_container_width=True):
@@ -100,16 +100,16 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    
-    # --- MONITOR MEZZI (Sempre visibile in sidebar) ---
+
+    # --- TABELLONE RISORSE (Sempre visibile in Sidebar) ---
     st.subheader("🚑 Stato Mezzi")
     if 'database_mezzi' in st.session_state:
         for m, d in st.session_state.database_mezzi.items():
-            # Un piccolo indicatore colorato per lo stato
-            colore = "🟢" if "Sede" in d['stato'] else "🔴"
-            st.write(f"{colore} **{m}**: {d['stato']}")
+            # Icona dinamica in base allo stato
+            icona = "🟢" if "Sede" in d['stato'] else "🔴"
+            st.write(f"{icona} **{m}**: {d['stato']}")
     
-    # --- GESTIONE ACCOUNT (SOLO ADMIN) ---
+    # --- GESTIONE ACCOUNT (VISIBILE SOLO AD ADMIN) ---
     if st.session_state.ruolo == "Admin":
         st.divider()
         st.subheader("👥 Gestione Account")
@@ -118,12 +118,13 @@ with st.sidebar:
         df_u = pd.read_sql_query("SELECT username, ruolo FROM utenti", conn)
         conn.close()
         
+        # Tabellone utenti compatto
         st.dataframe(df_u, use_container_width=True, hide_index=True)
 
-        with st.expander("➕ Nuovo / ❌ Elimina"):
-            # Aggiunta
-            nu = st.text_input("User", key="nu_s").lower().strip()
-            np = st.text_input("Pass", type="password", key="np_s")
+        with st.expander("⚙️ Opzioni Operatori"):
+            # Aggiunta Nuovo
+            nu = st.text_input("Nuovo User", key="nu_s").lower().strip()
+            np = st.text_input("Password", type="password", key="np_s")
             if st.button("AGGIUNGI", use_container_width=True):
                 if nu and np:
                     conn = sqlite3.connect('centrale.db')
@@ -137,7 +138,7 @@ with st.sidebar:
             
             st.divider()
             # Eliminazione
-            u_del = st.selectbox("Elimina", df_u['username'].tolist(), key="u_del_s")
+            u_del = st.selectbox("Elimina Utente", df_u['username'].tolist(), key="u_del_s")
             if st.button("CONFERMA ELIMINA", type="primary", use_container_width=True):
                 if u_del != "admin":
                     conn = sqlite3.connect('centrale.db')
@@ -147,10 +148,26 @@ with st.sidebar:
                     st.rerun()
 
 # =========================================================
-# 4. INTERFACCIA PRINCIPALE - CENTRALE OPERATIVA UNICA
+# 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
-# Niente più st.tabs! Solo il contenuto operativo
 st.title("🖥️ Centrale Operativa - SOREU Alpina")
+
+# Qui incolla tutto il tuo codice originale della Centrale:
+# 1. Generazione evento (if st.button("Genera Chiamata")...)
+# 2. Visualizzazione dati evento (if st.session_state.evento_corrente: ...)
+# 3. Selezione mezzi e codice
+# 4. Il tasto "🚀 INVIA MEZZI" con la logica VVF incorporata
+# 5. I log delle notifiche in fondo alla pagina
+
+# Esempio rapido per non lasciarti la pagina vuota:
+if st.session_state.get('evento_corrente') is None:
+    if st.button("📞 GENERA NUOVA CHIAMATA", type="primary", use_container_width=True):
+        # ... tua logica random ...
+        st.rerun()
+else:
+    ev = st.session_state.evento_corrente
+    st.error(f"🚨 EMERGENZA IN CORSO: {ev['sintomi']}")
+    # ... resto della tua gestione ...
                                 
 
 # =========================================================
