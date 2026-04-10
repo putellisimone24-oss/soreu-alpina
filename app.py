@@ -6,26 +6,24 @@ import time
 import sqlite3
 from datetime import datetime
 
-def init_db():
-    conn = sqlite3.connect('centrale_unica.db') # Nome nuovo
-    c = conn.cursor()
-    # ... le tue tabelle esistenti ...
-    
-    # AGGIUNGI QUESTA:
-    c.execute('''CREATE TABLE IF NOT EXISTS richieste_sanitarie 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  comune TEXT, indirizzo TEXT, scenario_vvf TEXT, stato TEXT)''')
-    
-    conn.commit()
-    conn.close()
+from pymilvus import MilvusClient
 
-# Avvia la creazione appena l'app si carica
-crea_tabella_ponte()
+# Sostituisci con i tuoi dati reali di Zilliz
+ZILLIZ_URI = "db_c0c7c2467e80acb" 
+ZILLIZ_TOKEN = "Kc1+UrW?+{Lsm5~r"
 
-# Per il refresh automatico (fondamentale per le missioni automatiche)
-# Se non hai la libreria, usa il trucco del meta-refresh o installala
-from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=30000, key="vvf_auto_refresh") # Ogni 30 secondi controlla il sistema
+client = MilvusClient(uri=ZILLIZ_URI, token=ZILLIZ_TOKEN)
+
+# Creazione della collezione (se non esiste)
+def init_zilliz_ponte():
+    if not client.has_collection("richieste_vvf_soreu"):
+        client.create_collection(
+            collection_name="richieste_vvf_soreu",
+            dimension=2, # Non useremo i vettori, ma serve un valore minimo
+            primary_field_name="id",
+            id_type="int",
+            auto_id=True
+        )
 
 # In cima alla pagina della SOREU Alpina, sotto il titolo
 conn = sqlite3.connect('centrale_unica.db')
