@@ -1,10 +1,29 @@
 import streamlit as st
 import pandas as pd
 import random
-import math
 import time
-import sqlite3
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
+
+# --- CONFIGURAZIONE PROFESSIONALE ---
+st.set_page_config(
+    page_title="SOREU Alpina | Emergenza Sanitaria",
+    page_icon="🚑",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Refresh ogni 20 secondi: dà l'idea di un sistema che "ascolta" sempre
+st_autorefresh(interval=20000, key="data_pull")
+
+# Custom CSS per farla sembrare un'app mobile/tablet
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; }
+    .stButton>button { width: 100%; border-radius: 10px; height: 3em; font-weight: bold; }
+    .st-emotion-cache-1kyxreq { justify-content: center; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
