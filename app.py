@@ -160,7 +160,7 @@ with st.sidebar:
 # =========================================================
 # 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
-st.title("🖥️ Centrale Operativa - SOREU Alpina")
+st.title("🖥️ Centrale Operativa - SOREU")
 
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
