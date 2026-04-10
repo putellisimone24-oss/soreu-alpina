@@ -158,31 +158,32 @@ with st.sidebar:
 # =========================================================
 # 4. RADAR INTERFORZE (LEGGE DA ZILLIZ)
 # =========================================================
-st.title("🖥️ Centrale Operativa - SOREU Alpina")
+st.title("🖥️ Scrivania SOREU")
 
-with st.expander("📡 RADAR INTERFORZE (Richieste dai Vigili del Fuoco)", expanded=True):
-    try:
-        # Cerchiamo richieste PENDENTI inviate dai VVF su Zilliz
-        res = client_zilliz.query(
-            collection_name="richieste_vvf_soreu",
-            filter="stato == 'PENDENTE'",
-            output_fields=["id", "comune", "indirizzo", "scenario"]
-        )
-
-        if res:
-            for r in res:
-                st.warning(f"🚨 **RICHIESTA DA VVF**: {r['scenario']} a {r['comune']}")
-                st.write(f"📍 Indirizzo: {r['indirizzo']}")
-                if st.button(f"✅ Prendi in carico Richiesta #{r['id']}", key=f"zilliz_{r['id']}"):
-                    # 1. TRASFORMA IN EVENTO REALE NELLA TUA CENTRALE
-                    st.session_state.evento_corrente = {
-                        "comune": r['comune'],
-                        "via": r['indirizzo'],
-                        "lat": 45.5, "lon": 9.6, # Coordinata approssimativa
-                        "sintomi": f"SUPPORTO TECNICO A VVF PER: {r['scenario']}",
-                        "codice_reale": "ROSSO",
-                        "necessita_msa": True
-                    }
+# TEST DI CONNESSIONE
+try:
+    check_vvf = client.query(
+        collection_name="richieste_vvf_soreu",
+        filter="stato == 'PENDENTE'",
+        output_fields=["id", "comune", "scenario"]
+    )
+    
+    if check_vvf:
+        st.error(f"🚨 ATTENZIONE: {len(check_vvf)} RICHIESTE DA VVF!")
+        for r in check_vvf:
+            col1, col2 = st.columns([3, 1])
+            col1.write(f"**{r['scenario']}** a **{r['comune']}**")
+            if col2.button("PRENDI", key=f"btn_{r['id']}"):
+                client.upsert(
+                    collection_name="richieste_vvf_soreu",
+                    data=[{"id": r['id'], "stato": "GESTITO", "vector": [0.1, 0.1]}]
+                )
+                st.rerun()
+    else:
+        st.success("✅ Nessuna richiesta pendente dai VVF")
+except Exception as e:
+    st.warning(f"Errore di collegamento al Cloud: {e}")
+    
                     # 2. AGGIORNA ZILLIZ (Segna come gestito per farlo sparire dal radar)
                     client_zilliz.upsert(
                         collection_name="richieste_vvf_soreu",
