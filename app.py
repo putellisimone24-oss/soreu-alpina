@@ -148,7 +148,6 @@ with st.sidebar:
 # 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU Alpina")
-
 # --- Visualizzazione Messaggio Admin ---
 conn = sqlite3.connect('centrale.db')
 msg_data = conn.execute("SELECT messaggio, autore FROM sistema_info WHERE id=1").fetchone()
