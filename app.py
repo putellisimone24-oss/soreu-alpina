@@ -5,52 +5,19 @@ import math
 import time
 import sqlite3
 from datetime import datetime
-
 from pymilvus import MilvusClient
 
-# Sostituisci con i tuoi dati reali di Zilliz
+# =========================================================
+# 1. CONNESSIONE ZILLIZ CLOUD (PONTE CON VVF)
+# =========================================================
 ZILLIZ_URI = "https://in03-c0c7c2467e80acb.serverless.aws-eu-central-1.cloud.zilliz.com" 
 ZILLIZ_TOKEN = "bfe6a9e62b37468484ab4481ef5d061448733ee5007d3a8db97579d86c5f128459d008778e621b1ef6685860847ab1b2f9d482dc"
 
-client = MilvusClient(uri=ZILLIZ_URI, token=ZILLIZ_TOKEN)
-
-st.subheader("📡 Radar Interforze (Zilliz Cloud)")
-
-# Cerchiamo entità con stato PENDENTE
-res = client.query(
-    collection_name="richieste_vvf_soreu",
-    filter="stato == 'PENDENTE'",
-    output_fields=["id", "comune", "indirizzo", "scenario"]
-)
-
-if res:
-    for r in res:
-        st.warning(f"🚨 VVF CHIAMA: {r['scenario']} a {r['comune']}")
-        if st.button(f"Prendi in carico {r['id']}"):
-            # Aggiorniamo lo stato su Zilliz per farlo sparire
-            client.upsert(
-                collection_name="richieste_vvf_soreu",
-                data=[{"id": r['id'], "stato": "GESTITO", "vector": [0.1, 0.1]}]
-            )
-            st.rerun()
-        )
-
-# In cima alla pagina della SOREU Alpina, sotto il titolo
-conn = sqlite3.connect('centrale_unica.db')
-richieste_vvf = pd.read_sql_query("SELECT * FROM richieste_sanitarie WHERE stato='PENDENTE'", conn)
-conn.close()
-
-for _, req in richieste_vvf.iterrows():
-    with st.warning(f"🚨 RICHIESTA DA VVF: {req['scenario_vvf']} a {req['comune']}"):
-        st.write(f"I Vigili del Fuoco richiedono supporto sanitario in {req['indirizzo']}")
-        if st.button(f"Genera Evento per Richiesta #{req['id']}"):
-            # 1. Qui chiami la tua funzione genera_evento() della SOREU
-            # 2. Aggiorni lo stato della richiesta per farla sparire
-            conn = sqlite3.connect('centrale_unica.db')
-            conn.execute("UPDATE richieste_sanitarie SET stato='PRESA_IN_CARICO' WHERE id=?", (req['id'],))
-            conn.commit()
-            conn.close()
-            st.rerun()
+# Inizializziamo il client Zilliz
+try:
+    client_zilliz = MilvusClient(uri=ZILLIZ_URI, token=ZILLIZ_TOKEN)
+except Exception as e:
+    st.error(f"Errore connessione Cloud Zilliz: {e}")
             
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
@@ -185,47 +152,46 @@ with st.sidebar:
                     st.rerun()
 
 # =========================================================
-# 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
+# 4. RADAR INTERFORZE (LEGGE DA ZILLIZ)
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU Alpina")
-# --- RADAR RICHIESTE INTERFORZE (VVF -> SOREU) ---
+
+with st.expander("📡 RADAR INTERFORZE (Richieste dai Vigili del Fuoco)", expanded=True):
+    try:
+        # Cerchiamo richieste PENDENTI inviate dai VVF su Zilliz
+        res = client_zilliz.query(
+            collection_name="richieste_vvf_soreu",
+            filter="stato == 'PENDENTE'",
+            output_fields=["id", "comune", "indirizzo", "scenario"]
+        )
+
+        if res:
+            for r in res:
+                st.warning(f"🚨 **RICHIESTA DA VVF**: {r['scenario']} a {r['comune']}")
+                st.write(f"📍 Indirizzo: {r['indirizzo']}")
+                if st.button(f"✅ Prendi in carico Richiesta #{r['id']}", key=f"zilliz_{r['id']}"):
+                    # 1. TRASFORMA IN EVENTO REALE NELLA TUA CENTRALE
+                    st.session_state.evento_corrente = {
+                        "comune": r['comune'],
+                        "via": r['indirizzo'],
+                        "lat": 45.5, "lon": 9.6, # Coordinata approssimativa
+                        "sintomi": f"SUPPORTO TECNICO A VVF PER: {r['scenario']}",
+                        "codice_reale": "ROSSO",
+                        "necessita_msa": True
+                    }
+                    # 2. AGGIORNA ZILLIZ (Segna come gestito per farlo sparire dal radar)
+                    client_zilliz.upsert(
+                        collection_name="richieste_vvf_soreu",
+                        data=[{"id": r['id'], "stato": "GESTITO", "vector": [0.1, 0.1]}]
+                    )
+                    st.success("Evento caricato nel sistema!")
+                    st.rerun()
+        else:
+            st.info("Nessuna richiesta pendente dai Vigili del Fuoco.")
+    except Exception as e:
+        st.error(f"Errore Radar: {e}")
+
 st.divider()
-conn = sqlite3.connect('centrale_unica.db')
-richieste = pd.read_sql_query("SELECT * FROM richieste_sanitarie WHERE stato='PENDENTE'", conn)
-conn.close()
-
-if not richieste.empty:
-    st.subheader("⚠️ Richieste Supporto da Vigili del Fuoco")
-    for _, req in richieste.iterrows():
-        with st.warning(f"🚨 **RICHIESTA DA VVF**: {req['scenario_vvf']} a {req['comune']}"):
-            st.write(f"**Indirizzo:** {req['indirizzo']}")
-            
-            if st.button(f"✅ Prendi in carico Richiesta #{req['id']}", key=f"req_{req['id']}"):
-                # 1. Crea l'evento nella SOREU usando i dati dei VVF
-                nuovo_evento = {
-                    "tipo": "Supporto Tecnico/Sanitario",
-                    "target": f"{req['indirizzo']} ({req['comune']})",
-                    "priorita": "Rosso",
-                    "codice": "VVF-REQ"
-                }
-                # Qui aggiungi l'evento alla tua lista session_state.eventi_disponibili
-                st.session_state.eventi_disponibili.append(nuovo_evento)
-                
-                # 2. Segna come gestita nel database per farla sparire
-                conn = sqlite3.connect('centrale_unica.db')
-                conn.execute("UPDATE richieste_sanitarie SET stato='PRESA_IN_CARICO' WHERE id=?", (req['id'],))
-                conn.commit()
-                conn.close()
-                
-                st.success("Evento creato nella lista d'attesa!")
-                st.rerun()
-
-# Qui incolla tutto il tuo codice originale della Centrale:
-# 1. Generazione evento (if st.button("Genera Chiamata")...)
-# 2. Visualizzazione dati evento (if st.session_state.evento_corrente: ...)
-# 3. Selezione mezzi e codice
-# 4. Il tasto "🚀 INVIA MEZZI" con la logica VVF incorporata
-# 5. I log delle notifiche in fondo alla pagina
 
 
 # =========================================================
