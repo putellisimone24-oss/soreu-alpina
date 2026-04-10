@@ -151,16 +151,6 @@ st.title("🖥️ Centrale Operativa - SOREU Alpina")
 # 4. Il tasto "🚀 INVIA MEZZI" con la logica VVF incorporata
 # 5. I log delle notifiche in fondo alla pagina
 
-# Esempio rapido per non lasciarti la pagina vuota:
-if st.session_state.get('evento_corrente') is None:
-    if st.button("📞 GENERA NUOVA CHIAMATA", type="primary", use_container_width=True):
-        # ... tua logica random ...
-        st.rerun()
-else:
-    ev = st.session_state.evento_corrente
-    st.error(f"🚨 EMERGENZA IN CORSO: {ev['sintomi']}")
-    # ... resto della tua gestione ...
-                                
 
 # =========================================================
 # 3. IL TUO CODICE ORIGINALE (INTEGRALE)
