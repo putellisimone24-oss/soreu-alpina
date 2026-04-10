@@ -148,24 +148,6 @@ with st.sidebar:
 # 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU Alpina")
-# --- Visualizzazione Messaggio Admin ---
-conn = sqlite3.connect('centrale.db')
-msg_data = conn.execute("SELECT messaggio, autore FROM sistema_info WHERE id=1").fetchone()
-conn.close()
-
-if msg_data and msg_data[0]:
-    st.warning(f"📢 **AVVISO DA {msg_data[1].upper()}:** {msg_data[0]}")
-
-# --- Controllo Richieste VVF (Punto 5) ---
-conn = sqlite3.connect('centrale.db')
-richieste = pd.read_sql_query("SELECT * FROM richieste_enti WHERE stato='APERTA'", conn)
-conn.close()
-
-for _, req in richieste.iterrows():
-    st.error(f"🚨 **RICHIESTA SUPPORTO DA {req['ente']}**: {req['scenario']} a {req['indirizzo']} (h {req['ora']})")
-    if st.button(f"Gestisci richiesta {req['id']}", key=f"req_{req['id']}"):
-        # Qui potresti far generare automaticamente l'evento nel tuo sistema
-        st.info("Richiesta presa in carico. Genera l'evento sanitario.")
         
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
