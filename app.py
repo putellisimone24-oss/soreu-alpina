@@ -6,6 +6,23 @@ import time
 import sqlite3
 from datetime import datetime
 
+# --- CONFIGURAZIONE PONTE INTERFORZE ---
+def crea_tabella_ponte():
+    # USA LO STESSO NOME FILE DB CHE USI NEI VVF (es. 'centrale_unica.db')
+    conn = sqlite3.connect('centrale_unica.db') 
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS richieste_sanitarie 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  comune TEXT, 
+                  indirizzo TEXT, 
+                  scenario_vvf TEXT, 
+                  stato TEXT)''')
+    conn.commit()
+    conn.close()
+
+# Avvia la creazione appena l'app si carica
+crea_tabella_ponte()
+
 # Per il refresh automatico (fondamentale per le missioni automatiche)
 # Se non hai la libreria, usa il trucco del meta-refresh o installala
 from streamlit_autorefresh import st_autorefresh
