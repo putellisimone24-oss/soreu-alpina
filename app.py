@@ -100,14 +100,6 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-
-    # --- TABELLONE RISORSE (Sempre visibile in Sidebar) ---
-    st.subheader("🚑 Stato Mezzi")
-    if 'database_mezzi' in st.session_state:
-        for m, d in st.session_state.database_mezzi.items():
-            # Icona dinamica in base allo stato
-            icona = "🟢" if "Sede" in d['stato'] else "🔴"
-            st.write(f"{icona} **{m}**: {d['stato']}")
     
     # --- GESTIONE ACCOUNT (VISIBILE SOLO AD ADMIN) ---
     if st.session_state.ruolo == "Admin":
