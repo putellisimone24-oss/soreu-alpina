@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 import random
-import math
 import time
-import sqlite3
-from datetime import datetime
+from pymilvus import MilvusClient
+from streamlit_autorefresh import st_autorefresh
+
+# --- 1. CONFIGURAZIONE AGGIORNAMENTO AUTOMATICO ---
+# Questo comando ricarica l'intera app ogni 20 secondi
+st_autorefresh(interval=20000, key="radar_refresh")
 
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
