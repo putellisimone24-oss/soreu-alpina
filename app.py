@@ -220,6 +220,49 @@ if not richieste.empty:
                 st.success("Evento creato nella lista d'attesa!")
                 st.rerun()
 
+st.subheader("📡 Monitor Interforze Zilliz")
+
+# Pulsante di emergenza per ricaricare manualmente
+if st.button("🔄 Forza Aggiornamento Cloud"):
+    client.load_collection("richieste_vvf_soreu")
+    st.rerun()
+
+try:
+    # 1. Vediamo TUTTO quello che c'è nel cloud per debug
+    tutti_i_dati = client.query(
+        collection_name="richieste_vvf_soreu",
+        filter="id >= 0",
+        output_fields=["id", "comune", "stato"]
+    )
+    
+    # Se vuoi vedere cosa c'è "dentro" per capire se i VVF inviano:
+    # st.write("Dati totali nel cloud:", tutti_i_dati) 
+
+    # 2. Radar vero e proprio
+    richieste = client.query(
+        collection_name="richieste_vvf_soreu",
+        filter="stato == 'PENDENTE'",
+        output_fields=["id", "comune", "indirizzo", "scenario"]
+    )
+
+    if richieste:
+        for r in richieste:
+            with st.error(f"🚑 RICHIESTA DA VVF: {r['scenario']}"):
+                st.write(f"📍 {r['indirizzo']} ({r['comune']})")
+                if st.button(f"PRENDI CARICO #{r['id']}", key=f"rec_{r['id']}"):
+                    # Segna come GESTITO
+                    client.upsert(
+                        collection_name="richieste_vvf_soreu",
+                        data=[{"id": r['id'], "stato": "GESTITO", "vector": [0.1, 0.1]}]
+                    )
+                    st.success("Presa in carico!")
+                    st.rerun()
+    else:
+        st.info("Nessuna richiesta pendente. Il cloud è vuoto o i dati sono già stati gestiti.")
+
+except Exception as e:
+    st.warning(f"Zilliz sta ancora scaldando i motori... Attendi 10 secondi. (Errore: {e})")
+    
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
 # 2. Visualizzazione dati evento (if st.session_state.evento_corrente: ...)
