@@ -14,15 +14,25 @@ ZILLIZ_TOKEN = "Kc1+UrW?+{Lsm5~r"
 
 client = MilvusClient(uri=ZILLIZ_URI, token=ZILLIZ_TOKEN)
 
-# Creazione della collezione (se non esiste)
-def init_zilliz_ponte():
-    if not client.has_collection("richieste_vvf_soreu"):
-        client.create_collection(
-            collection_name="richieste_vvf_soreu",
-            dimension=2, # Non useremo i vettori, ma serve un valore minimo
-            primary_field_name="id",
-            id_type="int",
-            auto_id=True
+st.subheader("📡 Radar Interforze (Zilliz Cloud)")
+
+# Cerchiamo entità con stato PENDENTE
+res = client.query(
+    collection_name="richieste_vvf_soreu",
+    filter="stato == 'PENDENTE'",
+    output_fields=["id", "comune", "indirizzo", "scenario"]
+)
+
+if res:
+    for r in res:
+        st.warning(f"🚨 VVF CHIAMA: {r['scenario']} a {r['comune']}")
+        if st.button(f"Prendi in carico {r['id']}"):
+            # Aggiorniamo lo stato su Zilliz per farlo sparire
+            client.upsert(
+                collection_name="richieste_vvf_soreu",
+                data=[{"id": r['id'], "stato": "GESTITO", "vector": [0.1, 0.1]}]
+            )
+            st.rerun()
         )
 
 # In cima alla pagina della SOREU Alpina, sotto il titolo
