@@ -4,6 +4,38 @@ import random
 import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+import streamlit as st
+
+def admin_panel():
+    st.title("⚙️ SOREU Alpina - Amministrazione")
+    
+    tab1, tab2, tab3 = st.tabs(["Gestione Flotta", "Richieste Eventi", "Report"])
+    
+    with tab2:
+        st.subheader("📬 Server Posta in Arrivo (Eventi)")
+        # Qui il software "legge" le richieste mandate dagli organizzatori
+        st.info("Hai 3 nuove richieste di copertura sanitaria da analizzare.")
+        
+        with st.expander("Richiesta #88 - Concerto Stadio BG"):
+            st.write("**Organizzatore:** Live Nation")
+            st.write("**Mezzi Richiesti:** 4 MSB, 2 MSA")
+            if st.button("Genera Documento di Approvazione"):
+                st.success("Email di conferma inviata all'organizzatore!")
+
+    with tab1:
+        st.subheader("🚒 Censimento Mezzi")
+        # Form per aggiungere nuovi mezzi senza toccare il codice
+        nome_nuovo = st.text_input("Nome Mezzo (es. BIANCA_ALBINO_01)")
+        tipo_nuovo = st.selectbox("Tipo", ["MSB", "MSA 1", "MSA 2", "ELI"])
+        if st.button("Inserisci in Flotta Operativa"):
+            st.warning("Mezzo aggiunto al database centrale.")
+
+# Protezione con Password
+if st.sidebar.text_input("Password Amministratore", type="password") == "soreu2026":
+    admin_panel()
+else:
+    st.sidebar.error("Inserisci la password per gestire il server.")
+    
 
 # Refresh ogni 20 secondi: dà l'idea di un sistema che "ascolta" sempre
 st_autorefresh(interval=20000, key="data_pull")
