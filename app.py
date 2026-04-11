@@ -6,6 +6,7 @@ from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import streamlit as st
 from pymilvus import MilvusClient
+st.session_state.clear() # Forza la cancellazione di tutto all'avvio
 
 # Connessione a Zilliz Cloud
 client = MilvusClient(
