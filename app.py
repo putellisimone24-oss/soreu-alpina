@@ -9,8 +9,8 @@ from pymilvus import MilvusClient
 
 # Connessione a Zilliz Cloud
 client = MilvusClient(
-    uri="IL_TUO_ENDPOINT_ZILLIZ",
-    token="TUA_API_KEY"
+    uri="https://in03-c0c7c2467e80acb.serverless.aws-eu-central-1.cloud.zilliz.com",
+    token="bfe6a9e62b37468484ab4481ef5d061448733ee5007d3a8db97579d86c5f128459d008778e621b1ef6685860847ab1b2f9d482dc"
 )
 
 def invia_richiesta_vvf(id_missione, tipologia, coordinate):
