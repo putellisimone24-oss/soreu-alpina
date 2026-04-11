@@ -5,25 +5,9 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# --- CONFIGURAZIONE PROFESSIONALE ---
-st.set_page_config(
-    page_title="SOREU Alpina | Emergenza Sanitaria",
-    page_icon="🚑",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Refresh ogni 20 secondi: dà l'idea di un sistema che "ascolta" sempre
 st_autorefresh(interval=20000, key="data_pull")
 
-# Custom CSS per farla sembrare un'app mobile/tablet
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; }
-    .stButton>button { width: 100%; border-radius: 10px; height: 3em; font-weight: bold; }
-    .st-emotion-cache-1kyxreq { justify-content: center; }
-    </style>
-    """, unsafe_allow_html=True)
 
 # =========================================================
 # 1. DATABASE E INIZIALIZZAZIONE
@@ -162,6 +146,32 @@ with st.sidebar:
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU")
 
+# --- SEZIONE GRANDI EVENTI ---
+with st.expander("📅 PIANIFICAZIONE GRANDI EVENTI / GARE"):
+    st.write("Compila il modulo per inviare la richiesta di copertura sanitaria alla SOREU.")
+    with st.form("form_evento"):
+        tipo_evento = st.selectbox("Tipo Evento", ["Concerto", "Gara Ciclistica", "Partita Calcio", "Manifestazione"])
+        luogo_evento = st.text_input("Località e Indirizzo")
+        data_evento = st.date_input("Data Evento")
+        mezzi_richiesti = st.multiselect("Mezzi necessari", ["MSB", "MSA 1", "MSA 2", "Squadra Appiedata"])
+        note = st.text_area("Note per la Centrale")
+        
+        submit = st.form_submit_button("INVIA RICHIESTA UFFICIALE")
+        
+        if submit:
+            # Simuliamo l'invio dell'email al server
+            nuovo_evento = {
+                "id_evento": f"EV-{random.randint(100, 999)}",
+                "tipo": tipo_evento,
+                "luogo": luogo_evento,
+                "data": str(data_evento),
+                "stato": "IN ATTESA APPROVAZIONE"
+            }
+            if 'lista_eventi' not in st.session_state:
+                st.session_state.lista_eventi = []
+            st.session_state.lista_eventi.append(nuovo_evento)
+            st.success("📩 Richiesta inviata al Server SOREU Alpina con successo!")
+            
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
 # 2. Visualizzazione dati evento (if st.session_state.evento_corrente: ...)
@@ -259,32 +269,6 @@ if 'database_ospedali' not in st.session_state:
         "Osp. Gavardo": {"pazienti": 0, "max": 7, "tipo": "DEA I"},
         "Osp. Chiari": {"pazienti": 0, "max": 8, "tipo": "DEA I"}
     }
-
-# --- SEZIONE GRANDI EVENTI ---
-with st.expander("📅 PIANIFICAZIONE GRANDI EVENTI / GARE"):
-    st.write("Compila il modulo per inviare la richiesta di copertura sanitaria alla SOREU.")
-    with st.form("form_evento"):
-        tipo_evento = st.selectbox("Tipo Evento", ["Concerto", "Gara Ciclistica", "Partita Calcio", "Manifestazione"])
-        luogo_evento = st.text_input("Località e Indirizzo")
-        data_evento = st.date_input("Data Evento")
-        mezzi_richiesti = st.multiselect("Mezzi necessari", ["MSB", "MSA 1", "MSA 2", "Squadra Appiedata"])
-        note = st.text_area("Note per la Centrale")
-        
-        submit = st.form_submit_button("INVIA RICHIESTA UFFICIALE")
-        
-        if submit:
-            # Simuliamo l'invio dell'email al server
-            nuovo_evento = {
-                "id_evento": f"EV-{random.randint(100, 999)}",
-                "tipo": tipo_evento,
-                "luogo": luogo_evento,
-                "data": str(data_evento),
-                "stato": "IN ATTESA APPROVAZIONE"
-            }
-            if 'lista_eventi' not in st.session_state:
-                st.session_state.lista_eventi = []
-            st.session_state.lista_eventi.append(nuovo_evento)
-            st.success("📩 Richiesta inviata al Server SOREU Alpina con successo!")
 
 # INIZIALIZZAZIONE VARIABILI DI SESSIONE
 if 'missioni' not in st.session_state: st.session_state.missioni = {}
