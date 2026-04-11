@@ -5,38 +5,27 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import streamlit as st
+from pymilvus import MilvusClient
 
-def admin_panel():
-    st.title("⚙️ SOREU Alpina - Amministrazione")
+# Connessione a Zilliz Cloud
+client = MilvusClient(
+    uri="IL_TUO_ENDPOINT_ZILLIZ",
+    token="TUA_API_KEY"
+)
+
+def invia_richiesta_vvf(id_missione, tipologia, coordinate):
+    # Creiamo il vettore/dato da inserire
+    data = [{
+        "id_missione": id_missione,
+        "tipologia": tipologia, # es. Incidente stradale con incastrati
+        "coordinate": coordinate,
+        "stato": "Inviata a VVF",
+        "timestamp": datetime.now().isoformat()
+    }]
     
-    tab1, tab2, tab3 = st.tabs(["Gestione Flotta", "Richieste Eventi", "Report"])
+    client.insert(collection_name="richieste_vvf_soreu", data=data)
+    st.success("🔥 Richiesta di supporto inviata ai Vigili del Fuoco!")
     
-    with tab2:
-        st.subheader("📬 Server Posta in Arrivo (Eventi)")
-        # Qui il software "legge" le richieste mandate dagli organizzatori
-        st.info("Hai 3 nuove richieste di copertura sanitaria da analizzare.")
-        
-        with st.expander("Richiesta #88 - Concerto Stadio BG"):
-            st.write("**Organizzatore:** Live Nation")
-            st.write("**Mezzi Richiesti:** 4 MSB, 2 MSA")
-            if st.button("Genera Documento di Approvazione"):
-                st.success("Email di conferma inviata all'organizzatore!")
-
-    with tab1:
-        st.subheader("🚒 Censimento Mezzi")
-        # Form per aggiungere nuovi mezzi senza toccare il codice
-        nome_nuovo = st.text_input("Nome Mezzo (es. BIANCA_ALBINO_01)")
-        tipo_nuovo = st.selectbox("Tipo", ["MSB", "MSA 1", "MSA 2", "ELI"])
-        if st.button("Inserisci in Flotta Operativa"):
-            st.warning("Mezzo aggiunto al database centrale.")
-
-# Protezione con Password
-if st.sidebar.text_input("Password Amministratore", type="password") == "soreu2026":
-    admin_panel()
-else:
-    st.sidebar.error("Inserisci la password per gestire il server.")
-    
-
 # Refresh ogni 20 secondi: dà l'idea di un sistema che "ascolta" sempre
 st_autorefresh(interval=20000, key="data_pull")
 
@@ -177,32 +166,6 @@ with st.sidebar:
 # 4. INTERFACCIA PRINCIPALE - SOLO CENTRALE OPERATIVA
 # =========================================================
 st.title("🖥️ Centrale Operativa - SOREU")
-
-# --- SEZIONE GRANDI EVENTI ---
-with st.expander("📅 PIANIFICAZIONE GRANDI EVENTI / GARE"):
-    st.write("Compila il modulo per inviare la richiesta di copertura sanitaria alla SOREU.")
-    with st.form("form_evento"):
-        tipo_evento = st.selectbox("Tipo Evento", ["Concerto", "Gara Ciclistica", "Partita Calcio", "Manifestazione"])
-        luogo_evento = st.text_input("Località e Indirizzo")
-        data_evento = st.date_input("Data Evento")
-        mezzi_richiesti = st.multiselect("Mezzi necessari", ["MSB", "MSA 1", "MSA 2", "Squadra Appiedata"])
-        note = st.text_area("Note per la Centrale")
-        
-        submit = st.form_submit_button("INVIA RICHIESTA UFFICIALE")
-        
-        if submit:
-            # Simuliamo l'invio dell'email al server
-            nuovo_evento = {
-                "id_evento": f"EV-{random.randint(100, 999)}",
-                "tipo": tipo_evento,
-                "luogo": luogo_evento,
-                "data": str(data_evento),
-                "stato": "IN ATTESA APPROVAZIONE"
-            }
-            if 'lista_eventi' not in st.session_state:
-                st.session_state.lista_eventi = []
-            st.session_state.lista_eventi.append(nuovo_evento)
-            st.success("📩 Richiesta inviata al Server SOREU Alpina con successo!")
             
 # Qui incolla tutto il tuo codice originale della Centrale:
 # 1. Generazione evento (if st.button("Genera Chiamata")...)
