@@ -550,7 +550,41 @@ else:
             col_evento, col_mappa = st.columns([1.5, 2])
             with col_evento:
                 st.header("📋 Ricezione Chiamate")
-               if st.button(f"✅ ACCETTA CHIAMATA", key=f"acc_{chiamata['id']}", use_container_width=True):
+              if st.button("✅ ACCETTA E INVIA MEZZO", key=f"btn_{c['id']}", type="primary"):
+    # 1. Aggiorna lo stato del mezzo locale
+    st.session_state.database_mezzi[mezzo_id]['stato'] = "🟡 In Missione"
+    
+    # 2. Prepara il dato per Zilliz (Richiesta VVF/Interforze)
+    # Nota: In un database vettoriale come Zilliz, 'vector' è l'embedding del testo
+    # Se non hai ancora gli embedding, carichiamo i dati come 'scalar fields'
+    dato_zilliz = {
+        "id": c['id'],
+        "evento": c['evento'],
+        "luogo": c['luogo'],
+        "mezzo_assegnato": mezzo_id,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    try:
+        # SCRITTURA SU ZILLIZ CLOUD
+        client.insert(
+            collection_name="richieste_vvf_soreu",
+            data=[dato_zilliz]
+        )
+        st.toast("☁️ Dati sincronizzati su Zilliz Cloud", icon="🛰️")
+    except Exception as e:
+        st.error(f"Errore sincronizzazione Cloud: {e}")
+
+    # 3. Crea la missione locale e pulisci il radar
+    st.session_state.missioni_attive.append({
+        "chiamata_id": c['id'],
+        "mezzo": mezzo_id,
+        "ora_partenza": datetime.now().strftime("%H:%M")
+    })
+    st.session_state.radar_chiamate.remove(c)
+    
+    st.success(f"Missione avviata! {mezzo_id} in codice {c['priorita']} verso {c['luogo']}")
+    st.rerun()
                     scelta_indirizzo = random.choice(database_indirizzi)
                     scelta_clinica = random.choice(scenari_clinici)
                     st.session_state.evento_corrente = {
