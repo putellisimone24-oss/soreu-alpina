@@ -184,93 +184,60 @@ def riproduci_suono_notifica():
     sound_html = f'<audio autoplay style="display:none;"><source src="{audio_url}" type="audio/ogg"></audio>'
     st.components.v1.html(sound_html, height=0, width=0)
 # =========================================================
-# DATABASE MEZZI AGGIORNATO (BG + BS) - CORRETTO
+# MEGA-DATABASE MEZZI SOREU ALPINA (BG + BS) - INTEGRALE
 # =========================================================
 if 'database_mezzi' not in st.session_state:
     st.session_state.database_mezzi = {
-        # --- MEZZI BERGAMO (Soreu Alpina) ---
-        "MSA 2 TREVIGLIO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Automedica Treviglio", "lat": 45.5185, "lon": 9.5998
-        },
-        "MSA 2 BERGAMO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Ospedale Papa Giovanni XXIII", "lat": 45.6869, "lon": 9.6272
-        },
-        "MSA 1 DALMINE": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Dalmine (Infermiere)", "lat": 45.6475, "lon": 9.6012
-        },
-        "MSA 1 ALZANO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Alzano Lombardo", "lat": 45.7310, "lon": 9.7280
-        },
-        "ELI BERGAMO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
-            "sede": "Base Elisoccorso Bergamo", "lat": 45.6710, "lon": 9.7020
-        },
-        "CRITRE_124.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Treviglio", "lat": 45.5242, "lon": 9.5912
-        },
-        "CRITRE_135.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Castel Rozzone", "lat": 45.5528, "lon": 9.6205
-        },
-        "CRI_BG_101.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Bergamo", "lat": 45.6948, "lon": 9.6761
-        },
-        "BIANCA_BG_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Bianca Bergamo", "lat": 45.7010, "lon": 9.6620
-        },
-        "BLU_LOVERE_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Blu Lovere", "lat": 45.8140, "lon": 10.0710
-        },
-        "BLU_GROMO_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Croce Blu Gromo", "lat": 45.9180, "lon": 9.9270
-        },
-        "CRI_SANPEL_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI San Pellegrino Terme", "lat": 45.8360, "lon": 9.6660
-        },
-        "VOLONTARI_TREVIOLO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Volontari Treviolo", "lat": 45.6730, "lon": 9.6100
-        },
+        
+        # --- NODO BRESCIA CITTÀ & HINTERLAND ---
+        "MSA 2 BRESCIA 1": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "Spedali Civili BS", "lat": 45.5510, "lon": 10.2280},
+        "MSA 2 BRESCIA 2": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "Spedali Civili BS", "lat": 45.5515, "lon": 10.2285},
+        "BRESCIA_SOCCORSO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Brescia Soccorso", "lat": 45.5300, "lon": 10.2000},
+        "CRIBRE_301.C": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Brescia (Sede Centrale)", "lat": 45.5350, "lon": 10.2150},
+        "CRIBRE_302.C": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Brescia (Nord)", "lat": 45.5450, "lon": 10.2200},
+        "ELI BRESCIA": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", "sede": "Base Elisoccorso Brescia", "lat": 45.5680, "lon": 10.2350},
+        "MSA 1 MANERBIO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", "sede": "CRI Manerbio", "lat": 45.3580, "lon": 10.1350},
+        "GARDA_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Volontari del Garda", "lat": 45.6020, "lon": 10.5150},
 
-        # --- MEZZI BRESCIA (Soreu Valpadana) ---
-        "MSA 2 BRESCIA 1": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Spedali Civili BS", "lat": 45.5510, "lon": 10.2280
-        },
-        "MSA 2 DESENZANO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", 
-            "sede": "Ospedale Desenzano", "lat": 45.4740, "lon": 10.5120
-        },
-        "MSA 1 MANERBIO": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", 
-            "sede": "CRI Manerbio", "lat": 45.3580, "lon": 10.1350
-        },
-        "ELI BRESCIA": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", 
-            "sede": "Base Brescia", "lat": 45.5680, "lon": 10.2350
-        },
-        "CRIBRE_301.C": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "CRI Brescia", "lat": 45.5350, "lon": 10.2150
-        },
-        "GARDA_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Volontari del Garda", "lat": 45.6020, "lon": 10.5150
-        },
-        "CAMONICA_01": {
-            "stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", 
-            "sede": "Arnica Berzo Inf.", "lat": 45.8850, "lon": 10.1820
-        }
+        # --- NODO CHIARI / PONTOGLIO / PALAZZOLO (L'OGLIO) ---
+        "MSA 2 CHIARI": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "ASST Franciacorta (Chiari)", "lat": 45.5390, "lon": 9.9250},
+        "CRI_CHIARI_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Chiari", "lat": 45.5330, "lon": 9.9210},
+        "SOCCORSO_CHIARI_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Chiari Soccorso", "lat": 45.5385, "lon": 9.9288},
+        "SOCCORSO_CHIARI_GETT": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Chiari Soccorso (Gettonata)", "lat": 45.5395, "lon": 9.9310},
+        "CRI_PONTOGLIO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Pontoglio sull'Oglio", "lat": 45.5720, "lon": 9.9210},
+        "CRI_PALAZZOLO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Palazzolo sull'Oglio", "lat": 45.5989, "lon": 9.8844},
+        "PEM_CAPRIOLO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Padana Emergenza Capriolo", "lat": 45.6375, "lon": 9.9325},
+
+        # --- NODO ZINGONIA / VERDELLINO / URGNANO (HINTERLAND BG) ---
+        "MSA 2 ZINGONIA": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "PS Verdellino/Zingonia", "lat": 45.5910, "lon": 9.6050},
+        "CRI_HINTERLAND_ZING": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Ospedale San Marco (Zingonia)", "lat": 45.5920, "lon": 9.6080},
+        "CRI_VERDELLINO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Verdellino", "lat": 45.6025, "lon": 9.6105},
+        "CRI_URGNANO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Urgnano", "lat": 45.5940, "lon": 9.6880},
+        "PEM_URGNANO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Padana Emergenza Urgnano", "lat": 45.5975, "lon": 9.6950},
+        "PEM_GETTONATA_BG": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "PEM Postazione Gettonata", "lat": 45.5500, "lon": 9.7000},
+
+        # --- AREA TREVIGLIO & BASSA BERGAMASCA ---
+        "MSA 2 TREVIGLIO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "Automedica Treviglio", "lat": 45.5185, "lon": 9.5998},
+        "CRITRE_124.C": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Treviglio", "lat": 45.5242, "lon": 9.5912},
+        "ATA_TREVIGLIO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "ATA Soccorso (Gettonata)", "lat": 45.5280, "lon": 9.6010},
+        "CRITRE_135.C": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Castel Rozzone", "lat": 45.5528, "lon": 9.6205},
+        "CRI_CARAVAGGIO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Caravaggio", "lat": 45.4981, "lon": 9.6425},
+        "CRI_ROMANO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Romano di L.", "lat": 45.5133, "lon": 9.7544},
+        "CRI_GRUMELLO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Grumello del Monte", "lat": 45.6370, "lon": 9.8750},
+
+        # --- BERGAMO CITTÀ & VALLI ---
+        "MSA 2 BERGAMO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 2", "sede": "Ospedale Papa Giovanni XXIII", "lat": 45.6869, "lon": 9.6272},
+        "MSA 1 DALMINE": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", "sede": "CRI Dalmine", "lat": 45.6475, "lon": 9.6012},
+        "MSA 1 ALZANO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSA 1", "sede": "CRI Alzano Lombardo", "lat": 45.7310, "lon": 9.7280},
+        "ELI BERGAMO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "ELI", "sede": "Base Elisoccorso Bergamo", "lat": 45.6710, "lon": 9.7020},
+        "CRI_BG_101.C": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI Bergamo", "lat": 45.6948, "lon": 9.6761},
+        "BIANCA_BG_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Croce Bianca Bergamo", "lat": 45.7010, "lon": 9.6620},
+        "CRI_SG_BIANCO": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI San Giovanni Bianco", "lat": 45.8750, "lon": 9.6520},
+        "VALLE_IMAGNA_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Soccorso Valle Imagna", "lat": 45.8110, "lon": 9.5250},
+        "CRI_SANPEL_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "CRI San Pellegrino Terme", "lat": 45.8360, "lon": 9.6660},
+        "BLU_LOVERE_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Croce Blu Lovere", "lat": 45.8140, "lon": 10.0710},
+        "BLU_GROMO_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Croce Blu Gromo", "lat": 45.9180, "lon": 9.9270},
+        "CAMONICA_01": {"stato": "Libero in Sede", "colore": "🟢", "tipo": "MSB", "sede": "Arnica Berzo Inf.", "lat": 45.8850, "lon": 10.1820},
     }
     
 # 2. DATABASE OSPEDALI REALI
@@ -293,11 +260,31 @@ if 'database_ospedali' not in st.session_state:
         "Osp. Chiari": {"pazienti": 0, "max": 8, "tipo": "DEA I"}
     }
 
-database_mail = [
-    {"mittente": "Milano Sport Eventi", "oggetto": "Richiesta Assistenza: Maratona Cittadina", "testo": "Richiesta copertura sanitaria per Maratona. Previsti 500 partecipanti.", "lat": 45.6960, "lon": 9.6670, "tipo": "ASSISTENZA SPORTIVA"},
-    {"mittente": "Monza Circuit Staff", "oggetto": "Supporto Sanitario Gara GP", "testo": "Richiesta MSB fissa per turno prove libere circuito locale.", "lat": 45.5300, "lon": 9.6100, "tipo": "ASSISTENZA GARA"},
-    {"mittente": "Arena Concerti BG", "oggetto": "Presidio Medico Concerto Rock", "testo": "Necessaria ambulanza per evento musicale serale in piazza.", "lat": 45.7042, "lon": 9.6622, "tipo": "EVENTO SPETTACOLO"}
-]
+# --- SEZIONE GRANDI EVENTI ---
+with st.expander("📅 PIANIFICAZIONE GRANDI EVENTI / GARE"):
+    st.write("Compila il modulo per inviare la richiesta di copertura sanitaria alla SOREU.")
+    with st.form("form_evento"):
+        tipo_evento = st.selectbox("Tipo Evento", ["Concerto", "Gara Ciclistica", "Partita Calcio", "Manifestazione"])
+        luogo_evento = st.text_input("Località e Indirizzo")
+        data_evento = st.date_input("Data Evento")
+        mezzi_richiesti = st.multiselect("Mezzi necessari", ["MSB", "MSA 1", "MSA 2", "Squadra Appiedata"])
+        note = st.text_area("Note per la Centrale")
+        
+        submit = st.form_submit_button("INVIA RICHIESTA UFFICIALE")
+        
+        if submit:
+            # Simuliamo l'invio dell'email al server
+            nuovo_evento = {
+                "id_evento": f"EV-{random.randint(100, 999)}",
+                "tipo": tipo_evento,
+                "luogo": luogo_evento,
+                "data": str(data_evento),
+                "stato": "IN ATTESA APPROVAZIONE"
+            }
+            if 'lista_eventi' not in st.session_state:
+                st.session_state.lista_eventi = []
+            st.session_state.lista_eventi.append(nuovo_evento)
+            st.success("📩 Richiesta inviata al Server SOREU Alpina con successo!")
 
 # INIZIALIZZAZIONE VARIABILI DI SESSIONE
 if 'missioni' not in st.session_state: st.session_state.missioni = {}
@@ -681,6 +668,20 @@ else:
                 with col_azione:
                     if st.button(f"Libera Posto", key=f"dim_{osp}"):
                         if dati["pazienti"] > 0: st.session_state.database_ospedali[osp]["pazienti"] -= 1; st.rerun()
+
+    st.subheader("📩 Inbox Richieste Eventi (Server Posta)")
+if 'lista_eventi' in st.session_state and st.session_state.lista_eventi:
+    for ev in st.session_state.lista_eventi:
+        with st.chat_message("user"):
+            st.write(f"📌 **{ev['tipo']}** a **{ev['luogo']}**")
+            st.caption(f"ID Protocollo: {ev['id_evento']} | Data: {ev['data']}")
+            col1, col2 = st.columns(2)
+            if col1.button(f"APPROVA {ev['id_evento']}"):
+                st.success("Evento approvato e inserito nel calendario operativo!")
+            if col2.button(f"RIFIUTA {ev['id_evento']}"):
+                st.error("Richiesta respinta.")
+else:
+    st.info("Nessuna nuova richiesta di eventi via email.")
 
     # ==================== 🚑 INTERFACCIA MEZZO ====================
     elif st.session_state.ruolo == "mezzo":
